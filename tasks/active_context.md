@@ -2,6 +2,21 @@
 
 ## 1. Current State
 
+### Estadísticas, actualización corporativa y exportación SECOP (2026-09-27)
+
+Sexta ronda: candidatos P-backend-queries-15/16/17 en la rama propia
+`fix/27092026-perf-stats-update-export`, PR #130 hacia `master`.
+Estadísticas organiza los conteos en cuatro consultas independientes;
+la actualización corporativa reutiliza la precarga del detalle y del propietario
+organizacional; SECOP carga sólo los campos consumidos por el Excel.
+Se conservan permisos, filtros, ventanas temporales, payloads y límite de exportación.
+QA independiente: 16 tests nuevos aprobados en SQLite y MySQL 8.4, seis
+regresiones existentes aprobadas y tres controles que fallan contra el baseline.
+Presupuestos verificados: estadísticas <=4 consultas, actualización <=8, exportación
+una consulta con proyección limitada. No se midieron latencia ni memoria. La respuesta
+corporativa mantiene la conversación completa: reducir consultas no limita su tamaño.
+Guion: `vps-ops-toolkit/docs/audits/2026-09-27-gym_project-perf-stats-update-export.md`.
+
 ### Limpieza del repositorio (2026-09-25)
 
 Auditoría de 1.309 archivos versionados: sin artefactos HIGH detectados. El lote

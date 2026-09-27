@@ -2,6 +2,13 @@
 
 ## 1. Feature Status
 
+**2026-09-27 — Sexta ronda de rendimiento:** candidatos 15/16/17: agregados
+organizacionales independientes, precarga de detalle al actualizar solicitudes
+corporativas y proyección mínima del export SECOP. PR #130. Contratos conservados;
+QA independiente aprobó 16 tests en SQLite y MySQL 8.4, seis regresiones y
+la detección de los tres problemas sobre el baseline. Sin migraciones,
+infraestructura ni cambios frontend.
+
 **2026-09-25 — Quinta ronda de rendimiento:** candidatos 12/13/14 aplicados en
 el PR #128: organizaciones para solicitudes, resúmenes de membresías y detalles
 organizacionales. Presupuestos constantes de máximo seis consultas por listado
