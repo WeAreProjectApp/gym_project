@@ -576,7 +576,17 @@ def update_legal_request_status(request, request_id):
             )
         
         # Get the legal request
-        legal_request = get_object_or_404(LegalRequest, id=request_id)
+        legal_request = get_object_or_404(
+            LegalRequest.objects.select_related('user', 'request_type', 'discipline')
+            .prefetch_related(
+                'files',
+                models.Prefetch(
+                    'responses',
+                    queryset=LegalRequestResponse.objects.select_related('user'),
+                ),
+            ),
+            id=request_id,
+        )
         
         # Get new status from request
         new_status = request.data.get('status')
