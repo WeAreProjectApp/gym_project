@@ -91,4 +91,6 @@ class LegalRequestListSerializer(serializers.ModelSerializer):
     
     def get_response_count(self, obj):
         """Get the number of responses for this request."""
+        if hasattr(obj, '_response_count'):
+            return obj._response_count
         return obj.responses.count()

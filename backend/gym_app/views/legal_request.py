@@ -428,8 +428,8 @@ def list_legal_requests(request):
         
         # Base queryset with related data for performance
         queryset = LegalRequest.objects.select_related(
-            'request_type', 'discipline'
-        ).prefetch_related('responses', 'files')
+            'user', 'request_type', 'discipline'
+        ).annotate(_response_count=models.Count('responses'))
         
         # Filter based on user role
         if hasattr(user, 'role') and user.role == 'lawyer':
