@@ -638,6 +638,10 @@ def secop_export_excel(request):
 
     queryset = _apply_secop_filters(
         SECOPProcess.objects.all(), request.query_params
+    ).only(
+        'reference', 'entity_name', 'department', 'procedure_name',
+        'procurement_method', 'contract_type', 'status', 'base_price',
+        'publication_date', 'closing_date', 'process_url',
     ).order_by('-publication_date')[:500]
 
     # Build Excel
