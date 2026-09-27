@@ -92,7 +92,7 @@ def get_organization_posts(request, organization_id):
     search = request.GET.get('search', None)
     
     # Base queryset
-    queryset = OrganizationPost.objects.filter(organization=organization)
+    queryset = OrganizationPost.objects.filter(organization=organization).select_related('author')
     
     # Apply filters
     if is_active is not None:
@@ -154,7 +154,7 @@ def get_organization_posts_public(request, organization_id):
     queryset = OrganizationPost.objects.filter(
         organization=organization,
         is_active=True
-    ).order_by('-is_pinned', '-created_at')
+    ).select_related('author').order_by('-is_pinned', '-created_at')
     
     # Filter parameters
     search = request.GET.get('search', None)
@@ -325,4 +325,3 @@ def toggle_organization_post_status(request, organization_id, post_id):
         'message': message,
         'post': OrganizationPostSerializer(post, context={'request': request}).data
     }, status=status.HTTP_200_OK)
-
