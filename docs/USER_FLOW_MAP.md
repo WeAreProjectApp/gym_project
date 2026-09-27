@@ -2,8 +2,8 @@
 
 Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede realizar en la plataforma, organizados por rol, con ramificaciones para cada variante de formulario o camino alternativo.
 
-**Fecha:** September 25, 2026
-**Versión:** 1.13.3
+**Fecha:** September 27, 2026
+**Versión:** 1.13.4
 **Fuentes:** `src/router/index.js`, `src/views/`, `src/components/`, `e2e/flow-definitions.json`, `docs/FUNCTIONAL_GUIDE_BY_ROLE.md`
 
 ---
@@ -2261,6 +2261,24 @@ Los módulos `directory`, `notifications`, `schedule` y `user-guide` aún no
 declaran outcomes `error`/`failure`; corresponden al backlog general y no al
 flujo SECOP modificado en esta sesión.
 
-**Documento actualizado:** August 21, 2026
-**Versión:** 1.12.1
-**Estado:** 164 flujos declarados (≡ `flow-definitions.json`); los dos flujos SECOP modificados están cubiertos por outcome.
+## Validación de mapa — 2026-09-27
+
+La optimización de `organizations/stats/`, la actualización corporativa de solicitudes
+y la exportación SECOP conserva rutas, permisos, filtros, campos de respuesta y
+estados visibles. No agrega ni retira flujos; se mantienen
+`org-corporate-dashboard-stats` (display), `org-corporate-requests` /
+`org-cross-request-flow` (success) y `secop-export-excel` (success).
+La auditoría de cobertura de esta ronda vive en el reporte QA del toolkit.
+
+## Validación de mapa — ronda 7 (2026-09-27)
+
+El listado legal conserva filtros, roles y campos: siguen `legal-list-client` y
+`legal-management-lawyer` (display). El cambio de estado conserva validación,
+permisos y respuesta: sigue `legal-status-update` (success, failure).
+Las publicaciones privadas y públicas conservan permisos, filtros, orden y autor:
+siguen `org-posts-management` (success, failure), `org-posts-visibility` (success)
+y `org-client-view` (display, error). No se agregan ni retiran flujos u outcomes.
+
+**Documento actualizado:** September 27, 2026
+**Versión:** 1.13.4
+**Estado:** Registro revisado para esta ronda backend, sin cambios de flujos ni outcomes.

@@ -428,8 +428,8 @@ def list_legal_requests(request):
         
         # Base queryset with related data for performance
         queryset = LegalRequest.objects.select_related(
-            'request_type', 'discipline'
-        ).prefetch_related('responses', 'files')
+            'user', 'request_type', 'discipline'
+        ).annotate(_response_count=models.Count('responses'))
         
         # Filter based on user role
         if hasattr(user, 'role') and user.role == 'lawyer':
@@ -576,7 +576,17 @@ def update_legal_request_status(request, request_id):
             )
         
         # Get the legal request
-        legal_request = get_object_or_404(LegalRequest, id=request_id)
+        legal_request = get_object_or_404(
+            LegalRequest.objects.select_related('user', 'request_type', 'discipline')
+            .prefetch_related(
+                'files',
+                models.Prefetch(
+                    'responses',
+                    queryset=LegalRequestResponse.objects.select_related('user'),
+                ),
+            ),
+            id=request_id,
+        )
         
         # Get new status from request
         new_status = request.data.get('status')

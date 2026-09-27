@@ -503,8 +503,12 @@ def get_organization_stats(request):
     base_queryset = Organization.objects.filter(corporate_client=request.user)
     
     # Basic counts
-    total_organizations = base_queryset.count()
-    active_organizations_count = base_queryset.filter(is_active=True).count()
+    organization_counts = base_queryset.aggregate(
+        total=Count('pk'),
+        active=Count('pk', filter=Q(is_active=True)),
+    )
+    total_organizations = organization_counts['total']
+    active_organizations_count = organization_counts['active']
     
     # Member counts
     total_members = OrganizationMembership.objects.filter(
@@ -513,15 +517,16 @@ def get_organization_stats(request):
     ).count()
     
     # Invitation counts
-    total_pending_invitations = OrganizationInvitation.objects.filter(
+    invitation_counts = OrganizationInvitation.objects.filter(
         organization__corporate_client=request.user,
-        status='PENDING'
-    ).count()
-    
-    recent_invitations_count = OrganizationInvitation.objects.filter(
-        organization__corporate_client=request.user,
-        created_at__gte=timezone.now() - timezone.timedelta(days=7)
-    ).count()
+    ).aggregate(
+        pending=Count('pk', filter=Q(status='PENDING')),
+        recent=Count('pk', filter=Q(
+            created_at__gte=timezone.now() - timezone.timedelta(days=7),
+        )),
+    )
+    total_pending_invitations = invitation_counts['pending']
+    recent_invitations_count = invitation_counts['recent']
     
     # Recent requests count
     recent_requests_count = CorporateRequest.objects.filter(

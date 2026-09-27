@@ -379,7 +379,9 @@ def corporate_update_request_status(request, request_id):
     Only the corporate client who received the request can update it.
     """
     corporate_request = get_object_or_404(
-        CorporateRequest, 
+        _with_detail_relations(CorporateRequest.objects.all()).select_related(
+            'organization__corporate_client',
+        ),
         id=request_id, 
         corporate_client=request.user
     )
