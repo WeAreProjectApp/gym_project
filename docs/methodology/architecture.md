@@ -174,6 +174,12 @@ el cambio de responsable se refleja en la respuesta después de guardar.
 La exportación SECOP proyecta únicamente los campos consumidos por el workbook,
 conservando búsquedas por descripción en SQL, orden y tope de quinientas filas.
 
+Los resúmenes de solicitudes legales anotan el número de respuestas y unen cliente
+más catálogos; el serializer conserva el cálculo directo como fallback. El PUT de
+estado precarga archivos y respuestas con sus autores, además de las relaciones
+que consume el email. Los listados paginados de publicaciones unen el autor; mantienen
+su filtro de acceso y el máximo de cien filas por página.
+
 ### 3.2 Document PDF resource boundary
 
 Security remediation completed on 2026-08-26 after `pip-audit` reported 85

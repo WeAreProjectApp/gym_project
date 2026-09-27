@@ -2,6 +2,22 @@
 
 ## 1. Current State
 
+### Solicitudes legales y publicaciones — ronda 7 (2026-09-27)
+
+Candidatos P-backend-queries-18/19/20 sobre el mismo PR #130. El listado legal une
+cliente y catálogos, calcula respuestas mediante anotación y evita cargar archivos
+innecesarios; el serializer mantiene el fallback para instancias sin anotación.
+La actualización de estado precarga el detalle consumido por la respuesta y la
+notificación. Ambos listados de publicaciones unen su autor sin cambiar permisos.
+QA independiente aprobó siete tests nuevos en SQLite y MySQL 8.4.11, trece
+regresiones existentes y cinco controles que fallan sobre el baseline por consultas.
+Al pasar de uno a cincuenta elementos, el listado legal mantiene una consulta,
+el PUT cuatro y las publicaciones privadas/públicas tres/cuatro. Memoria y payload
+de las solicitudes legales siguen sujetos a la conversación/lista completa.
+Guion: `vps-ops-toolkit/docs/audits/2026-09-27-gym_project-perf-legal-posts.md`.
+Evidencia: `vps-ops-toolkit/docs/audits/2026-09-27-r7-gym_project-qa.md`.
+El cierre autorizado incluye merge-queue después del CI verde.
+
 ### Estadísticas, actualización corporativa y exportación SECOP (2026-09-27)
 
 Sexta ronda: candidatos P-backend-queries-15/16/17 en la rama propia
