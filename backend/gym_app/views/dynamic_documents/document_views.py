@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 
 # States in which a document is locked for any write operations (content, letterhead, etc.)
 LOCKED_STATES = frozenset(['PendingSignatures', 'FullySigned'])
+MAX_DOCUMENT_PAGE_SIZE = 100
 
 
 def get_optimized_document_queryset(base_qs=None):
@@ -241,6 +242,7 @@ def list_dynamic_documents(request):
 
     if limit <= 0:
         limit = 10
+    limit = min(limit, MAX_DOCUMENT_PAGE_SIZE)
 
     paginator = Paginator(queryset, limit)
 
