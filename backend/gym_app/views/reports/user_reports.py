@@ -3,6 +3,7 @@ User-related Excel report generators.
 """
 import datetime
 import pandas as pd
+from django.db.models import Count, Exists, OuterRef
 from django.utils import timezone
 
 from gym_app.models import Process, Case, User, ActivityFeed
@@ -14,6 +15,8 @@ ROLE_DISPLAY_MAP = {
     'corporate_client': 'Cliente Corporativo',
     'basic': 'Básico',
 }
+
+MAX_LAWYERS_WORKLOAD_QUERIES = 6
 
 
 def generate_registered_users_report(
@@ -368,45 +371,44 @@ def generate_lawyers_workload_report(response, start_date, end_datetime):
     else:
         lawyers = User.objects.filter(role='lawyer')
 
-    # Get all case types for analysis
-    case_types = Case.objects.all()
+    # Preserve the case catalogue's order without loading processes or stages.
+    case_types = list(Case.objects.values_list('type', flat=True))
+    fallo_stages = Process.stages.through.objects.filter(
+        process_id=OuterRef('pk'), stage__status='Fallo',
+    )
+    workload_groups = (
+        Process.objects.filter(
+            lawyer_id__in=lawyers.values('pk'),
+            created_at__range=[start_date, end_datetime],
+        )
+        .annotate(is_completed=Exists(fallo_stages))
+        .values('lawyer_id', 'case__type', 'is_completed')
+        .annotate(total=Count('pk'))
+        .order_by()
+    )
+    workloads = {}
+    for group in workload_groups.iterator(chunk_size=1000):
+        counts = workloads.setdefault(group['lawyer_id'], {
+            'total': 0, 'active': 0, 'completed': 0, 'cases': {},
+        })
+        counts['total'] += group['total']
+        key = 'completed' if group['is_completed'] else 'active'
+        counts[key] += group['total']
+        case_type = group['case__type']
+        counts['cases'][case_type] = counts['cases'].get(case_type, 0) + group['total']
 
     # Prepare data for Excel
     data = []
 
     for lawyer in lawyers:
-        # Get all processes assigned to this lawyer
-        all_processes = Process.objects.filter(
-            lawyer=lawyer,
-            created_at__range=[start_date, end_datetime]
-        ).prefetch_related('stages', 'case')
-
-        # Count total assigned processes
-        total_processes = all_processes.count()
-
-        # Skip lawyers with no processes
-        if total_processes == 0:
+        counts = workloads.get(lawyer.pk)
+        if counts is None:
             continue
-
-        # Count active processes (processes without "Fallo" stage)
-        active_processes = 0
-        completed_processes = 0
-
-        # Count processes by case type
-        case_type_counts = {case.type: 0 for case in case_types}
-
-        for process in all_processes:
-            # Check if process is completed (has a "Fallo" stage)
-            has_fallo = process.stages.filter(status='Fallo').exists()
-
-            if has_fallo:
-                completed_processes += 1
-            else:
-                active_processes += 1
-
-            # Increment count for the process's case type
-            if process.case:
-                case_type_counts[process.case.type] = case_type_counts.get(process.case.type, 0) + 1
+        total_processes = counts['total']
+        active_processes = counts['active']
+        completed_processes = counts['completed']
+        case_type_counts = dict.fromkeys(case_types, 0)
+        case_type_counts.update(counts['cases'])
 
         # Format case type distribution
         case_type_distribution = ', '.join([
