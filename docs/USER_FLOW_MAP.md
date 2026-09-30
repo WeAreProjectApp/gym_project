@@ -336,8 +336,8 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 ---
 
 ### user-guide-navigation: Navegación del Manual de Usuario
-- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ✅
-- **Descripción:** Navegación por módulos, filtrado por rol, búsqueda y quick links
+- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ⚠️ `success` existente; `display` pendiente de QA en los anchos estándar
+- **Descripción:** Navegación por módulos y secciones filtradas por rol, búsqueda local, quick links y ejemplos. A 412×915 y 835×1194 se abre el menú, se selecciona Procesos, se busca y limpia la búsqueda y se abre/cierra un ejemplo con controles de al menos 44×44 px efectivos, títulos conservados y sin overflow horizontal.
 
 ### Explorador del manual — actualización 2026-09-19
 
@@ -352,8 +352,16 @@ operativo se calcula por separado; no modifica los guards ni carga datos privado
 | `user-guide-explorer-access` | success, error | Cliente → función administrativa → requisito explícito sin acceso; staff → Abrir módulo → destino permitido | `user-guide-explorer.spec.js` |
 | `user-guide-explorer-tour` | success | Espacio → Iniciar recorrido → Siguiente / Salir → capacidad seleccionada | `user-guide-explorer.spec.js` |
 | `user-guide-explorer-relations` | success | Explorador → Ocultar relaciones → conexiones ocultas y URL actualizada | `user-guide-explorer.spec.js` |
-| `user-guide-explorer-responsive` | success | Móvil/tableta → tarjetas → función; teclado → Enter / Escape → retorno | `user-guide-explorer-layout.spec.js` |
+| `user-guide-explorer-responsive` | success, display | A 412×915 y 835×1194 → Colaboración → Notificaciones conserva tarjetas y título sin overflow; a 1195×835, 1440×900 y 2560×1440 conserva navegación y el layout correspondiente al contenedor, con controles operables | `user-guide-explorer-layout.spec.js` |
 | `user-guide-explorer-orbit` | success | Escritorio → Girar a la derecha → cambio de posición observable | `user-guide-explorer-layout.spec.js` |
+
+**Outcomes del módulo `user-guide`:** `success` cubre navegación, búsqueda,
+ejemplos y controles del explorador; `error` aplica a restricciones de acceso
+explicadas sin enlace operativo; `display` cubre el contenido y el layout
+responsive. **Failure:** n/a para las interacciones del manual: su contenido es
+local y no hay una acción de negocio ni una respuesta fallida visible al usuario.
+La carga de usuarios al montar la vista no expone un estado de fallo del manual;
+los fallos de autenticación y de destinos pertenecen a sus flujos respectivos.
 
 **Por rol:** todos recorren el mismo catálogo. Clientes y básicos ven las
 restricciones de funciones del equipo; abogados tienen acceso según su pertenencia

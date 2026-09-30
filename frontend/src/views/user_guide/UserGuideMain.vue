@@ -4,7 +4,7 @@
   </ModuleHeader>
 
   <!-- Main content -->
-  <div class="flex min-h-0 flex-col lg:flex-row h-[calc(100vh/var(--app-zoom,1)-4rem)]">
+  <div class="user-guide flex min-h-0 flex-col lg:flex-row h-[calc(100vh/var(--app-zoom,1)-4rem)]">
     <!-- Sidebar Navigation -->
     <aside class="hidden lg:block shrink-0 border-r border-gray-200 bg-gray-50 overflow-y-auto" :class="isExplorer ? 'w-64' : 'w-80'">
       <GuideNavigation
@@ -22,6 +22,10 @@
     <div class="lg:hidden w-full">
       <div class="p-4 border-b border-gray-200 bg-white">
         <button
+          type="button"
+          data-testid="guide-mobile-navigation-toggle"
+          :aria-expanded="showMobileNav"
+          aria-controls="guide-mobile-navigation"
           @click="showMobileNav = !showMobileNav"
           class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
         >
@@ -34,7 +38,7 @@
         </button>
       </div>
       
-      <div v-if="showMobileNav" class="border-b border-gray-200 bg-gray-50">
+      <div v-if="showMobileNav" id="guide-mobile-navigation" data-testid="guide-mobile-navigation" class="border-b border-gray-200 bg-gray-50">
         <GuideNavigation
           :current-role="currentUserRole"
           :selected-module="selectedModule"
@@ -205,3 +209,17 @@ watch(() => router.currentRoute.value.params.refresh, () => {
   searchQuery.value = '';
 });
 </script>
+
+<style>
+/* Keep the hit area at 44 physical pixels despite the application's zoom. */
+.user-guide :is(button, a, input, select),
+.guide-example :is(button, a, input, select) {
+  min-width: calc(44px / var(--app-zoom, 1));
+  min-height: calc(44px / var(--app-zoom, 1));
+}
+
+.user-guide input,
+.guide-example input {
+  font-size: calc(16px / var(--app-zoom, 1));
+}
+</style>
