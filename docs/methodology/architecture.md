@@ -180,6 +180,15 @@ estado precarga archivos y respuestas con sus autores, además de las relaciones
 que consume el email. Los listados paginados de publicaciones unen el autor; mantienen
 su filtro de acceso y el máximo de cien filas por página.
 
+El reporte de carga de abogados agrupa procesos por abogado, tipo de caso y
+existencia de una etapa Fallo mediante Count y Exists, sin materializar procesos
+o etapas por abogado. La concesión de visibilidad por rol bloquea el documento,
+lee los permisos previos y usa bulk_create en lotes de mil. Una colisión revierte
+la transacción antes del fallback get_or_create para conservar la atribución de
+permisos concedidos y omitidos. La usabilidad mantiene save/clean y su verificación
+de visibilidad previa. El listado de documentos acota la página existente a cien
+documentos raíz (default diez), sin acotar sus relaciones anidadas.
+
 ### 3.2 Document PDF resource boundary
 
 Security remediation completed on 2026-08-26 after `pip-audit` reported 85
@@ -191,6 +200,15 @@ resolved path/symlink escapes, and routes all PDF reading/writing through
 requests; xhtml2pdf is no longer installed. ReportLab 5 remains isolated to
 direct canvas/signature/watermark and SVG-backed generation. The deprecated
 `PyPDF2` distribution is no longer installed.
+
+### 3.3 Controles responsive del Manual de Usuario
+
+El módulo `/user_guide` conserva navegación móvil y layout basado en el ancho del
+contenedor del explorador. Sus controles compensan `--app-zoom` para mantener
+44 px físicos y sus inputs 16 px; el panel de ejemplo teleportado comparte esa
+regla mediante una clase propia. El cierre reserva espacio junto al título.
+La matriz de QA vive en `frontend/e2e/helpers/viewports.js` y los comportamientos
+pertenecen a los flows existentes de navegación y layout del explorador.
 
 ---
 

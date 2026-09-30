@@ -2,6 +2,33 @@
 
 ## 1. Current State
 
+### Rendimiento y responsividad del manual — ronda 8 (2026-09-30)
+
+Rama propia `fix/30092026-perf-responsive-manual`, PR #131 hacia `master`.
+El reporte de carga de abogados agrupa los procesos por abogado, tipo de caso y
+existencia de una etapa Fallo; conserva el archivo Excel completo y sus gráficos.
+La concesión de visibilidad por rol lee permisos existentes e inserta los faltantes
+por lotes bajo bloqueo documental, con rollback y recuperación de carreras.
+La usabilidad conserva su validación por usuario: el candidato 22 sigue parcial.
+El listado de documentos conserva el default de diez y admite hasta cien por página;
+ese límite no acota las relaciones anidadas ni garantiza el presupuesto total de queries.
+
+El Manual de Usuario compensa su zoom global para mantener controles de 44 px
+efectivos y búsqueda de 16 px; reserva espacio para el cierre del ejemplo teleportado.
+Se declaran outcomes display en los dos flows existentes y una matriz de cinco tamaños,
+con atención a 412×915 y 835×1194. QA independiente aprobó 19 casos backend en
+MySQL 8.4 aislado, 13 E2E nuevos y 18 regresiones del manual sin reintentos,
+además de cinco negativos de permisos. SQLite aprobó 18 casos y excluyó sólo la
+carrera que exige bloqueo de filas; esa carrera sincronizada sí pasó en MySQL.
+Los tres controles detectan la regresión con el código anterior: el reporte pasa
+de siete a 252 consultas, la visibilidad de nueve a 205 y limit101 devuelve 101 filas.
+El código actual mantiene consultas constantes dentro de los presupuestos y hasta
+cien documentos por página. Auditor y gate focalizado aprobados; no se usa producción.
+Guiones: `2026-09-30-gym_project-perf-round8.md` y
+`2026-09-30-gym_project-responsive-user-guide.md` en los audits del toolkit.
+Verificación: `2026-09-30-r8-gym_project-qa.md` en el toolkit.
+La entrega de esta ronda es PR abierto con CI verde; no incluye merge ni despliegue.
+
 ### Solicitudes legales y publicaciones — ronda 7 (2026-09-27)
 
 Candidatos P-backend-queries-18/19/20 sobre el mismo PR #130. El listado legal une

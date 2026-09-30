@@ -336,7 +336,7 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 ---
 
 ### user-guide-navigation: Navegación del Manual de Usuario
-- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ⚠️ `success` existente; `display` pendiente de QA en los anchos estándar
+- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ✅ `success` y `display` verificados en los anchos estándar; dos specs
 - **Descripción:** Navegación por módulos y secciones filtradas por rol, búsqueda local, quick links y ejemplos. A 412×915 y 835×1194 se abre el menú, se selecciona Procesos, se busca y limpia la búsqueda y se abre/cierra un ejemplo con controles de al menos 44×44 px efectivos, títulos conservados y sin overflow horizontal.
 
 ### Explorador del manual — actualización 2026-09-19

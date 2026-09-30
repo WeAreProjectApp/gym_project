@@ -2,6 +2,18 @@
 
 ## 1. Feature Status
 
+**2026-09-30 — Octava ronda:** reporte de carga agregado, visibilidad por rol con
+inserción por lotes y máximo de cien documentos por página (default diez).
+Candidatos 21/22 y views-01, PR #131; el 22 queda parcial porque usabilidad mantiene
+save/clean. El manual conserva navegación, búsqueda y ejemplos con targets físicos
+de 44 px; sus dos flows existentes declaran display a los cinco tamaños estándar.
+QA independiente aprobó 19 casos MySQL, 13 E2E nuevos, 18 regresiones del manual y
+cinco negativos de permisos. SQLite: 18 aprobados y la carrera excluida por falta
+de bloqueo de filas; su ejecución MySQL está verificada. Los tres guards fallan
+contra el baseline por consultas o exceso de filas. Auditor/gate focalizado limpios.
+Evidencia: `2026-09-30-r8-gym_project-qa.md` del toolkit, junto con los guiones
+perf-round8 y responsive-user-guide. Sin migraciones, infraestructura ni despliegue.
+
 **2026-09-27 — Séptima ronda de rendimiento:** candidatos 18/19/20: listado y
 actualización de solicitudes legales, autores de publicaciones organizacionales.
 Mismo PR #130; siete tests nuevos aprobados en SQLite y MySQL 8.4.11, trece
