@@ -45,9 +45,8 @@ async function openProcessesGuide(page) {
 }
 
 async function expectPhysicalTarget(locator) {
-  const box = await locator.boundingBox();
-  expect(box?.width).toBeGreaterThanOrEqual(43.5);
-  expect(box?.height).toBeGreaterThanOrEqual(43.5);
+  await expect.poll(async () => (await locator.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(43.5);
+  await expect.poll(async () => (await locator.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);
 }
 
 async function expectTitleClearOfClose(title, close) {
