@@ -18,6 +18,11 @@ success y declaran display. La compilación y ejecución final independiente de 
 ronda quedan asociadas al commit limpio en el reporte del toolkit
 `2026-10-01-gym_project-improvement-pass-auth-directory-i1.md`.
 El CI admite PRs apilados sobre la base activa; conserva sus jobs y gates.
+Los guiones del directorio representan a un abogado recurrente con la aplicación
+previamente instalada (`pwa-installed=true`, estado público persistido). Conservan
+los clics reales del menú, la lista y el detalle. La primera visita web expuso un
+aviso de instalación que intercepta el menú móvil; es otra causa obligatoria,
+registrada para una ronda posterior, fuera del cupo de estas tres mejoras.
 Entrega: PR abierto con CI verde, sin migraciones ni despliegue.
 Los otros hallazgos quedan pendientes por cupo o por evidencia/decisión comercial.
 

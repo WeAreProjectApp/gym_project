@@ -8,6 +8,13 @@ import {
 } from "../helpers/directoryMocks.js";
 import { viewportUse } from "../helpers/viewports.js";
 
+// Directory scenarios represent returning users who already installed the app.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("pwa-installed", "true");
+  });
+});
+
 async function expectPhysicalTarget(locator) {
   await expect.poll(async () => (await locator.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(43.5);
   await expect.poll(async () => (await locator.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.5);

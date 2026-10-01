@@ -9,6 +9,10 @@ abre la ficha para evitar desborde móvil. Tests de registro, perfil y serialize
 verifican intentos de promoción y cuentas internas legítimas; E2E conserva búsqueda
 y navegación, con cinco tamaños y controles en móvil/tableta vertical. Los flows
 existentes mantienen success y añaden display. CI cubre PRs hacia la base activa.
+Los guiones E2E usan el estado público de aplicación previamente instalada para
+un abogado recurrente; mantienen navegación y clics reales. El aviso de instalación
+que bloquea el menú móvil en la primera visita web queda como obligación separada
+para una ronda posterior, sin certificar ese estado en esta entrega.
 La evidencia y verificación final pertenecen a `i1-auth-directory-20261001`, en
 `2026-10-01-gym_project-improvement-pass-auth-directory-i1.md` del toolkit.
 Las otras obligaciones quedan pendientes por cupo; el conflicto comercial de
