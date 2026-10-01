@@ -2,6 +2,30 @@
 
 ## 1. Current State
 
+### Privilegios y directorio — mejora transversal (2026-10-01)
+
+Ronda `i1-auth-directory-20261001` en worktree propio, desde la base activa
+`fix/30092026-perf-responsive-manual`. La selección canónica comprende la
+asignación de autoridad desde registro/perfil y dos problemas del detalle del
+directorio: datos recortados y objetivos físicos menores de 44 px. La protección
+mantiene campos de autoridad visibles pero de solo lectura para entradas públicas.
+La fila de entrada también ajusta nombres largos para no ensanchar la lista en
+móvil. Los botones del detalle compensan el zoom global y tienen nombre accesible.
+La regresión backend focalizada pasa 38 casos en SQLite aislado; el gate de los
+tests modificados pasa sin errores. Dos pruebas de autoridad y dos visuales fallan
+contra el código anterior por la causa esperada. Los dos flows existentes conservan
+success y declaran display. La compilación y ejecución final independiente de esta
+ronda quedan asociadas al commit limpio en el reporte del toolkit
+`2026-10-01-gym_project-improvement-pass-auth-directory-i1.md`.
+El CI admite PRs apilados sobre la base activa; conserva sus jobs y gates.
+Los guiones del directorio representan a un abogado recurrente con la aplicación
+previamente instalada (`pwa-installed=true`, estado público persistido). Conservan
+los clics reales del menú, la lista y el detalle. La primera visita web expuso un
+aviso de instalación que intercepta el menú móvil; es otra causa obligatoria,
+registrada para una ronda posterior, fuera del cupo de estas tres mejoras.
+Entrega: PR abierto con CI verde, sin migraciones ni despliegue.
+Los otros hallazgos quedan pendientes por cupo o por evidencia/decisión comercial.
+
 ### Rendimiento y responsividad del manual — ronda 8 (2026-09-30)
 
 Rama propia `fix/30092026-perf-responsive-manual`, PR #131 hacia `master`.

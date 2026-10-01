@@ -2,7 +2,8 @@ name: CI — Tests
 
 on:
   pull_request:
-    branches: [main, master, 'release-*']
+    # Session PRs can target an active release with a fix/perf branch prefix.
+    branches: ['**']
   push:
     branches: [main, master]
 

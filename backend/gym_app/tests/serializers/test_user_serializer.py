@@ -28,7 +28,6 @@ def user_data():
         'password': 'securepassword123',
         'first_name': 'Test',
         'last_name': 'User',
-        'role': 'client'
     }
 
 @pytest.fixture
@@ -43,8 +42,6 @@ def complete_user_data():
         'birthday': date(1990, 1, 1),
         'identification': 'ID12345',
         'document_type': 'CC',
-        'role': 'lawyer',
-        'is_gym_lawyer': True,
         'is_profile_completed': True
     }
 
@@ -112,7 +109,7 @@ class TestUserSerializer:
         assert user.email == user_data['email']
         assert user.first_name == user_data['first_name']
         assert user.last_name == user_data['last_name']
-        assert user.role == user_data['role']
+        assert user.role == 'basic'
         assert user.check_password(user_data['password'])
 
     def test_create_minimal_user_default_values(self):
@@ -122,7 +119,6 @@ class TestUserSerializer:
             'password': make_password('testpassword'),
             'first_name': 'Minimal',
             'last_name': 'User',
-            'role': 'client'
         }
         
         serializer = UserSerializer(data=user_data)
@@ -168,9 +164,39 @@ class TestUserSerializer:
         
         assert user.identification == complete_user_data['identification']
         assert user.document_type == complete_user_data['document_type']
-        assert user.role == complete_user_data['role']
-        assert user.is_gym_lawyer == complete_user_data['is_gym_lawyer']
         assert user.is_profile_completed == complete_user_data['is_profile_completed']
+
+    def test_create_user_discards_submitted_authority(self):
+        """Fails if public serializer input can grant an internal authority."""
+        payload = {
+            'email': 'authority-attempt@example.com',
+            'password': make_password('securepassword123'),
+            'first_name': 'Authority',
+            'last_name': 'Attempt',
+            'role': 'admin',
+            'is_gym_lawyer': True,
+        }
+
+        serializer = UserSerializer(data=payload)
+
+        assert serializer.is_valid()
+        created_user = serializer.save()
+        assert created_user.role == 'basic'
+        assert created_user.is_gym_lawyer is False
+
+    def test_serialize_user_exposes_internal_authority(self):
+        """Fails if the SPA can no longer read an internal user's authority."""
+        internal_user = User.objects.create_user(
+            email='internal-authority@example.com',
+            password='securepassword123',
+            role='admin',
+            is_gym_lawyer=True,
+        )
+
+        serializer = UserSerializer(internal_user)
+
+        assert serializer.data['role'] == 'admin'
+        assert serializer.data['is_gym_lawyer'] is True
     
     def test_update_user_changes_fields(self, existing_user):
         """Test updating an existing user - fields are updated."""
@@ -502,4 +528,3 @@ class TestActivityFeedSerializerEdges:
         serializer = ActivityFeedSerializer(activity)
         data = serializer.data
         assert "action_display" in data
-
