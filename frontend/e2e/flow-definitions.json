@@ -1,6 +1,6 @@
 {
-  "version": "1.13.5",
-  "lastUpdated": "2026-09-30",
+  "version": "1.13.6",
+  "lastUpdated": "2026-10-01",
   "flows": {
     "user-guide-explorer-navigation": {
       "name": "Explorar el ecosistema desde el manual",
@@ -1552,7 +1552,8 @@
       "description": "Buscar por nombre/email/rol y ver detalle",
       "expectedSpecs": 1,
       "outcomes": [
-        "success"
+        "success",
+        "display"
       ]
     },
     "schedule-appointment": {
@@ -2298,7 +2299,8 @@
       "description": "Desde el modal de detalle de usuario del directorio, 'Ver proceso' navega al detalle del proceso y 'Ver todos en Procesos' al listado del usuario.",
       "expectedSpecs": 1,
       "outcomes": [
-        "success"
+        "success",
+        "display"
       ]
     },
     "secop-list-error-retry": {

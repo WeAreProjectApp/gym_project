@@ -568,6 +568,8 @@ la fuente actualizada para el total es `flow-definitions.json`.
 ### directory-search: Buscar en directorio
 - **Módulo:** directory | **Prioridad:** P2 | **Ruta:** `/directory_list` | **E2E:** ✅
 - **Descripción:** Buscar y consultar usuarios del sistema (solo Lawyer)
+- **Outcomes:** success, display. El detalle permite leer datos largos completos
+  en compact, portrait, landscape, desktop y wide, sin desbordamiento horizontal.
 
 **Pasos:**
 1. Navega a `/directory_list`
@@ -2173,6 +2175,8 @@ Auditoría de doble fuente (interacciones frontend + clasificación de 205 endpo
 ### directory-navigate-to-process: Navegar del directorio a procesos
 - **Módulo:** directory | **Prioridad:** P4 | **Ruta:** `/directory_list` | **E2E:** ✅ (`directory.spec.js`)
 - **Descripción:** Desde el modal de detalle de usuario, "Ver proceso" navega al detalle y "Ver todos en Procesos" al listado filtrado por el usuario.
+- **Outcomes:** success, display. Cierre y navegación tienen nombres accesibles
+  y objetivos físicos de 44×44 px, incluyendo compact y portrait con zoom global.
 
 ### secop-list-error-retry: Reintentar carga del listado SECOP
 - **Módulo:** secop | **Prioridad:** P4 | **Ruta:** `/secop` | **E2E:** ✅ (`secop-list-error-retry.spec.js`)

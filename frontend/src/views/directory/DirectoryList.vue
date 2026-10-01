@@ -10,15 +10,15 @@
   <div class="flex-1">
     <!-- Directory by cards -->
     <div>
-      <ul role="list" class="divide-y divide-gray-100 grid xl:grid-cols-2">
+      <ul role="list" class="min-w-0 divide-y divide-gray-100 grid xl:grid-cols-2">
         <li
           v-for="user in filteredUsers"
           :key="user.id"
-          class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6 lg:px-8 cursor-pointer"
+          class="relative min-w-0 flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6 lg:px-8 cursor-pointer"
           @click="openUserModal(user)"
         >
           <div
-            class="flex min-w-0 gap-x-4"
+            class="flex min-w-0 flex-1 gap-x-4"
           >
             <img
               class="h-12 w-12 flex-none rounded-full bg-gray-50 object-cover object-center"
@@ -33,7 +33,7 @@
               {{ getInitials(user.first_name, user.last_name) }}
             </div>
             <div class="min-w-0 flex-auto">
-              <p class="text-sm font-semibold leading-6 text-gray-900">
+              <p class="text-sm font-semibold leading-6 text-gray-900 [overflow-wrap:anywhere]">
                 <a>
                   <span class="absolute inset-x-0 -top-px bottom-0" />
                   {{ user.first_name }} {{ user.last_name }}

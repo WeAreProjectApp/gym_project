@@ -66,6 +66,19 @@ def _pin_user_auth_now(monkeypatch, fixed_now=FIXED_REFERENCE_TIME):
     monkeypatch.setattr("gym_app.views.userAuth.timezone.now", lambda: fixed_now)
 
 
+def _sign_on_payload(email, passcode, submitted_authority):
+    """Return a valid public registration payload with one authority attempt."""
+    payload = {
+        "email": email,
+        "password": "SecurePass123!",
+        "first_name": "Authority",
+        "last_name": "Attempt",
+        "passcode": passcode,
+    }
+    payload.update(submitted_authority)
+    return payload
+
+
 # =========================================================================
 # sign_on
 # =========================================================================
@@ -1061,6 +1074,31 @@ class TestSignOnMassAssignment:
         assert created_user.is_superuser is False
         assert created_user.is_active is True
 
+    @pytest.mark.parametrize(
+        ("email", "passcode", "submitted_authority"),
+        [
+            ("admin-role-attempt@example.com", "901001", {"role": "admin", "is_gym_lawyer": True}),
+            ("lawyer-role-attempt@example.com", "901002", {"role": "lawyer", "is_gym_lawyer": True}),
+            ("lawyer-flag-attempt@example.com", "901003", {"is_gym_lawyer": True}),
+        ],
+    )
+    def test_discards_submitted_authority(self, api_client, email, passcode, submitted_authority):
+        """Fails if public registration grants a submitted role or lawyer flag."""
+        EmailVerificationCode.objects.create(email=email, code=passcode)
+
+        response = api_client.post(
+            reverse("sign_on"),
+            _sign_on_payload(email, passcode, submitted_authority),
+            format="json",
+        )
+
+        created_user = User.objects.get(email=email)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert created_user.role == "basic"
+        assert created_user.is_gym_lawyer is False
+        assert response.data["user"]["role"] == "basic"
+        assert response.data["user"]["is_gym_lawyer"] is False
+
 
 # =========================================================================
 # T4: sign_on — weak password rejected
@@ -1207,5 +1245,4 @@ class TestResetPasswordWeakPassword:
         # Verify code was NOT marked as used
         code.refresh_from_db()
         assert code.used is False
-
 

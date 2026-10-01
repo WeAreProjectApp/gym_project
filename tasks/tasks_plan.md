@@ -2,6 +2,18 @@
 
 ## 1. Feature Status
 
+**2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
+registro/perfil asignen autoridad, leer datos largos completos en el directorio
+y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que
+abre la ficha para evitar desborde móvil. Tests de registro, perfil y serializer
+verifican intentos de promoción y cuentas internas legítimas; E2E conserva búsqueda
+y navegación, con cinco tamaños y controles en móvil/tableta vertical. Los flows
+existentes mantienen success y añaden display. CI cubre PRs hacia la base activa.
+La evidencia y verificación final pertenecen a `i1-auth-directory-20261001`, en
+`2026-10-01-gym_project-improvement-pass-auth-directory-i1.md` del toolkit.
+Las otras obligaciones quedan pendientes por cupo; el conflicto comercial de
+precios sigue bloqueado. Sin migraciones ni despliegue.
+
 **2026-09-30 — Octava ronda:** reporte de carga agregado, visibilidad por rol con
 inserción por lotes y máximo de cien documentos por página (default diez).
 Candidatos 21/22 y views-01, PR #131; el 22 queda parcial porque usabilidad mantiene
