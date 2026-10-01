@@ -24,12 +24,13 @@
             leave-from="opacity-100 translate-y-0 sm:scale-100"
             leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
+            <DialogPanel data-testid="guide-example-dialog" class="guide-example relative w-full transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-3xl sm:p-6">
               <!-- Close button -->
               <div class="absolute right-0 top-0 pr-4 pt-4">
                 <button
                   type="button"
-                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
+                  data-testid="guide-example-close"
+                  class="flex items-center justify-center rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
                   @click="$emit('close')"
                 >
                   <span class="sr-only">Cerrar</span>
@@ -41,7 +42,7 @@
               <div class="sm:flex sm:items-start">
                 <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                   <!-- Header -->
-                  <DialogTitle as="h3" class="text-2xl font-bold leading-6 text-gray-900 mb-4">
+                  <DialogTitle as="h3" class="pr-[calc(60px/var(--app-zoom,1))] break-words text-2xl font-bold leading-6 text-gray-900 mb-4">
                     {{ example.title }}
                   </DialogTitle>
 

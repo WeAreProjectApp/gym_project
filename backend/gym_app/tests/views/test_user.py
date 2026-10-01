@@ -228,6 +228,70 @@ class TestUserViews:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'email' in response.data
 
+    def test_update_profile_discards_submitted_authority(self, api_client, user):
+        """Fails if a basic profile update can promote its account to admin."""
+        api_client.force_authenticate(user=user)
+        payload = {
+            'first_name': 'Protected',
+            'role': 'admin',
+            'is_gym_lawyer': True,
+        }
+
+        response = api_client.put(
+            reverse('update_profile', kwargs={'pk': user.id}),
+            payload,
+            format='json',
+        )
+
+        user.refresh_from_db()
+        api_client.force_authenticate(user=user)
+        denied_response = api_client.get(reverse('reassignment-summary'))
+        assert response.status_code == status.HTTP_200_OK
+        assert user.first_name == 'Protected'
+        assert user.role == 'basic'
+        assert user.is_gym_lawyer is False
+        assert denied_response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_update_profile_preserves_existing_internal_authority(self, api_client):
+        """Fails if a legitimate profile edit strips an internal account's authority."""
+        admin_user = User.objects.create_user(
+            email='profile-admin@example.com',
+            password='testpassword',
+            role='admin',
+            is_gym_lawyer=True,
+        )
+        lawyer = User.objects.create_user(
+            email='profile-lawyer@example.com',
+            password='testpassword',
+            role='lawyer',
+            is_gym_lawyer=True,
+        )
+        api_client.force_authenticate(user=admin_user)
+        payload = {
+            'first_name': 'Retained',
+            'role': 'client',
+            'is_gym_lawyer': False,
+        }
+
+        response = api_client.put(
+            reverse('update_profile', kwargs={'pk': admin_user.id}),
+            payload,
+            format='json',
+        )
+
+        admin_user.refresh_from_db()
+        api_client.force_authenticate(user=admin_user)
+        summary_response = api_client.get(
+            reverse('reassignment-summary'),
+            {'lawyer_id': lawyer.id},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert admin_user.first_name == 'Retained'
+        assert admin_user.role == 'admin'
+        assert admin_user.is_gym_lawyer is True
+        assert summary_response.status_code == status.HTTP_200_OK
+        assert summary_response.data['lawyer']['id'] == lawyer.id
+
     def test_get_user_activities_returns_only_authenticated_user(self, api_client, user, another_user):
         """Activities should be filtered by the authenticated user."""
         ActivityFeed.objects.create(user=user, action_type='create', description='User action')

@@ -2,6 +2,34 @@
 
 ## 1. Feature Status
 
+**2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
+registro/perfil asignen autoridad, leer datos largos completos en el directorio
+y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que
+abre la ficha para evitar desborde móvil. Tests de registro, perfil y serializer
+verifican intentos de promoción y cuentas internas legítimas; E2E conserva búsqueda
+y navegación, con cinco tamaños y controles en móvil/tableta vertical. Los flows
+existentes mantienen success y añaden display. CI cubre PRs hacia la base activa.
+Los guiones E2E usan el estado público de aplicación previamente instalada para
+un abogado recurrente; mantienen navegación y clics reales. El aviso de instalación
+que bloquea el menú móvil en la primera visita web queda como obligación separada
+para una ronda posterior, sin certificar ese estado en esta entrega.
+La evidencia y verificación final pertenecen a `i1-auth-directory-20261001`, en
+`2026-10-01-gym_project-improvement-pass-auth-directory-i1.md` del toolkit.
+Las otras obligaciones quedan pendientes por cupo; el conflicto comercial de
+precios sigue bloqueado. Sin migraciones ni despliegue.
+
+**2026-09-30 — Octava ronda:** reporte de carga agregado, visibilidad por rol con
+inserción por lotes y máximo de cien documentos por página (default diez).
+Candidatos 21/22 y views-01, PR #131; el 22 queda parcial porque usabilidad mantiene
+save/clean. El manual conserva navegación, búsqueda y ejemplos con targets físicos
+de 44 px; sus dos flows existentes declaran display a los cinco tamaños estándar.
+QA independiente aprobó 19 casos MySQL, 13 E2E nuevos, 18 regresiones del manual y
+cinco negativos de permisos. SQLite: 18 aprobados y la carrera excluida por falta
+de bloqueo de filas; su ejecución MySQL está verificada. Los tres guards fallan
+contra el baseline por consultas o exceso de filas. Auditor/gate focalizado limpios.
+Evidencia: `2026-09-30-r8-gym_project-qa.md` del toolkit, junto con los guiones
+perf-round8 y responsive-user-guide. Sin migraciones, infraestructura ni despliegue.
+
 **2026-09-27 — Séptima ronda de rendimiento:** candidatos 18/19/20: listado y
 actualización de solicitudes legales, autores de publicaciones organizacionales.
 Mismo PR #130; siete tests nuevos aprobados en SQLite y MySQL 8.4.11, trece

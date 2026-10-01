@@ -148,12 +148,13 @@ class TestUserGlobalLetterhead:
         lawyer_user.letterhead_image = image
         lawyer_user.save(update_fields=["letterhead_image"])
 
+        url = reverse("get-user-letterhead-image")
+
         def raise_error(*args, **kwargs):
             raise Exception("boom")
 
         monkeypatch.setattr(os.path, "exists", raise_error)
 
-        url = reverse("get-user-letterhead-image")
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR

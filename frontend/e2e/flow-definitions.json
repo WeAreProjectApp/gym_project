@@ -1,6 +1,6 @@
 {
-  "version": "1.13.4",
-  "lastUpdated": "2026-09-27",
+  "version": "1.13.6",
+  "lastUpdated": "2026-10-01",
   "flows": {
     "user-guide-explorer-navigation": {
       "name": "Explorar el ecosistema desde el manual",
@@ -47,8 +47,8 @@
       "module": "user-guide",
       "roles": ["shared"],
       "priority": "P2",
-      "description": "Recorrer capacidades desde móvil o tableta sin desbordamiento y volver con Escape desde el teclado.",
-      "outcomes": ["success"]
+      "description": "Recorrer capacidades desde móvil o tableta sin desbordamiento y volver con Escape desde el teclado. A 412×915 y 835×1194 elegir Colaboración y Notificaciones conserva el título y las tarjetas; a 1195×835, 1440×900 y 2560×1440 se conserva la navegación y el layout que corresponde al ancho del contenedor, con controles operables.",
+      "outcomes": ["success", "display"]
     },
     "user-guide-explorer-orbit": {
       "name": "Controlar la órbita del explorador",
@@ -1552,7 +1552,8 @@
       "description": "Buscar por nombre/email/rol y ver detalle",
       "expectedSpecs": 1,
       "outcomes": [
-        "success"
+        "success",
+        "display"
       ]
     },
     "schedule-appointment": {
@@ -1603,11 +1604,9 @@
         "shared"
       ],
       "priority": "P3",
-      "description": "Navegación por módulos, roles, quick links",
-      "expectedSpecs": 1,
-      "outcomes": [
-        "success"
-      ]
+      "description": "Navegación por módulos, roles y quick links; a 412×915 y 835×1194 se abre el menú, se selecciona Procesos, se busca y limpia la búsqueda y se abre/cierra un ejemplo con controles de al menos 44×44 px efectivos, conservando los títulos y sin overflow horizontal.",
+      "expectedSpecs": 2,
+      "outcomes": ["success", "display"]
     },
     "misc-policies": {
       "name": "Políticas y páginas informativas",
@@ -2300,7 +2299,8 @@
       "description": "Desde el modal de detalle de usuario del directorio, 'Ver proceso' navega al detalle del proceso y 'Ver todos en Procesos' al listado del usuario.",
       "expectedSpecs": 1,
       "outcomes": [
-        "success"
+        "success",
+        "display"
       ]
     },
     "secop-list-error-retry": {

@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from gym_app.models.dynamic_document import (
     DynamicDocument, 
@@ -25,6 +25,36 @@ from gym_app.models.dynamic_document import (
 from .permissions import require_lawyer_or_owner, require_lawyer_only
 
 User = get_user_model()
+
+MAX_ROLE_VISIBILITY_QUERIES = 8
+ROLE_PERMISSION_INSERT_SIZE = 1000
+
+
+def _grant_role_visibility(document, users, granted_by):
+    """Insert missing permissions together, retaining get_or_create race semantics."""
+    try:
+        with transaction.atomic():
+            # Serialize role grants for this document, including their response.
+            DynamicDocument.objects.select_for_update().get(pk=document.pk)
+            users = list(users)
+            existing = set(DocumentVisibilityPermission.objects.filter(
+                document=document, user_id__in=[user.pk for user in users],
+            ).values_list('user_id', flat=True))
+            missing = [DocumentVisibilityPermission(
+                document=document, user=user, granted_by=granted_by,
+            ) for user in users if user.pk not in existing]
+            DocumentVisibilityPermission.objects.bulk_create(
+                missing, batch_size=ROLE_PERMISSION_INSERT_SIZE,
+            )
+            return [(user, user.pk not in existing) for user in users]
+    except IntegrityError:
+        # A single-user grant can race the bulk insert without taking our lock.
+        # The failed transaction has rolled back: only get_or_create can tell
+        # which permissions this request actually created in that case.
+        with transaction.atomic():
+            return [(user, DocumentVisibilityPermission.objects.get_or_create(
+                document=document, user=user, defaults={'granted_by': granted_by},
+            )[1]) for user in users]
 
 
 @api_view(['GET'])
@@ -866,27 +896,20 @@ def grant_visibility_permissions_by_role(request, pk):
         created_permissions = []
         skipped_users = []
         
-        with transaction.atomic():
-            for user in users:
-                permission, created = DocumentVisibilityPermission.objects.get_or_create(
-                    document=document,
-                    user=user,
-                    defaults={'granted_by': request.user}
-                )
-                
-                if created:
-                    created_permissions.append({
-                        'user_id': user.id,
-                        'email': user.email,
-                        'full_name': f"{user.first_name} {user.last_name}".strip(),
-                        'role': user.role
-                    })
-                else:
-                    skipped_users.append({
-                        'user_id': user.id,
-                        'email': user.email,
-                        'reason': 'Already has permission'
-                    })
+        for user, created in _grant_role_visibility(document, users, request.user):
+            if created:
+                created_permissions.append({
+                    'user_id': user.id,
+                    'email': user.email,
+                    'full_name': f"{user.first_name} {user.last_name}".strip(),
+                    'role': user.role
+                })
+            else:
+                skipped_users.append({
+                    'user_id': user.id,
+                    'email': user.email,
+                    'reason': 'Already has permission'
+                })
         
         warning = None
         if document.is_public:
@@ -1507,4 +1530,4 @@ def revoke_permissions_combined(request, pk):
         return Response(
             {'detail': 'Document not found.'}, 
             status=status.HTTP_404_NOT_FOUND
-        ) 
+        )

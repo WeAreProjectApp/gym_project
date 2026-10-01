@@ -336,8 +336,8 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 ---
 
 ### user-guide-navigation: Navegación del Manual de Usuario
-- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ✅
-- **Descripción:** Navegación por módulos, filtrado por rol, búsqueda y quick links
+- **Módulo:** user-guide | **Prioridad:** P3 | **Ruta:** `/user_guide` | **E2E:** ✅ `success` y `display` verificados en los anchos estándar; dos specs
+- **Descripción:** Navegación por módulos y secciones filtradas por rol, búsqueda local, quick links y ejemplos. A 412×915 y 835×1194 se abre el menú, se selecciona Procesos, se busca y limpia la búsqueda y se abre/cierra un ejemplo con controles de al menos 44×44 px efectivos, títulos conservados y sin overflow horizontal.
 
 ### Explorador del manual — actualización 2026-09-19
 
@@ -352,8 +352,16 @@ operativo se calcula por separado; no modifica los guards ni carga datos privado
 | `user-guide-explorer-access` | success, error | Cliente → función administrativa → requisito explícito sin acceso; staff → Abrir módulo → destino permitido | `user-guide-explorer.spec.js` |
 | `user-guide-explorer-tour` | success | Espacio → Iniciar recorrido → Siguiente / Salir → capacidad seleccionada | `user-guide-explorer.spec.js` |
 | `user-guide-explorer-relations` | success | Explorador → Ocultar relaciones → conexiones ocultas y URL actualizada | `user-guide-explorer.spec.js` |
-| `user-guide-explorer-responsive` | success | Móvil/tableta → tarjetas → función; teclado → Enter / Escape → retorno | `user-guide-explorer-layout.spec.js` |
+| `user-guide-explorer-responsive` | success, display | A 412×915 y 835×1194 → Colaboración → Notificaciones conserva tarjetas y título sin overflow; a 1195×835, 1440×900 y 2560×1440 conserva navegación y el layout correspondiente al contenedor, con controles operables | `user-guide-explorer-layout.spec.js` |
 | `user-guide-explorer-orbit` | success | Escritorio → Girar a la derecha → cambio de posición observable | `user-guide-explorer-layout.spec.js` |
+
+**Outcomes del módulo `user-guide`:** `success` cubre navegación, búsqueda,
+ejemplos y controles del explorador; `error` aplica a restricciones de acceso
+explicadas sin enlace operativo; `display` cubre el contenido y el layout
+responsive. **Failure:** n/a para las interacciones del manual: su contenido es
+local y no hay una acción de negocio ni una respuesta fallida visible al usuario.
+La carga de usuarios al montar la vista no expone un estado de fallo del manual;
+los fallos de autenticación y de destinos pertenecen a sus flujos respectivos.
 
 **Por rol:** todos recorren el mismo catálogo. Clientes y básicos ven las
 restricciones de funciones del equipo; abogados tienen acceso según su pertenencia
@@ -560,6 +568,11 @@ la fuente actualizada para el total es `flow-definitions.json`.
 ### directory-search: Buscar en directorio
 - **Módulo:** directory | **Prioridad:** P2 | **Ruta:** `/directory_list` | **E2E:** ✅
 - **Descripción:** Buscar y consultar usuarios del sistema (solo Lawyer)
+- **Outcomes:** success, display. El detalle permite leer datos largos completos
+  en compact, portrait, landscape, desktop y wide, sin desbordamiento horizontal.
+- **Precondición E2E:** abogado recurrente con aplicación previamente instalada
+  (`pwa-installed=true`, estado público persistido). La primera visita web con el
+  aviso de instalación tiene una obligación de navegación separada pendiente.
 
 **Pasos:**
 1. Navega a `/directory_list`
@@ -2165,6 +2178,11 @@ Auditoría de doble fuente (interacciones frontend + clasificación de 205 endpo
 ### directory-navigate-to-process: Navegar del directorio a procesos
 - **Módulo:** directory | **Prioridad:** P4 | **Ruta:** `/directory_list` | **E2E:** ✅ (`directory.spec.js`)
 - **Descripción:** Desde el modal de detalle de usuario, "Ver proceso" navega al detalle y "Ver todos en Procesos" al listado filtrado por el usuario.
+- **Outcomes:** success, display. Cierre y navegación tienen nombres accesibles
+  y objetivos físicos de 44×44 px, incluyendo compact y portrait con zoom global.
+- **Precondición E2E:** abogado recurrente con aplicación previamente instalada;
+  se mantienen los clics reales desde el menú. El aviso de instalación de la primera
+  visita web queda pendiente como causa separada, fuera de esta matriz.
 
 ### secop-list-error-retry: Reintentar carga del listado SECOP
 - **Módulo:** secop | **Prioridad:** P4 | **Ruta:** `/secop` | **E2E:** ✅ (`secop-list-error-retry.spec.js`)

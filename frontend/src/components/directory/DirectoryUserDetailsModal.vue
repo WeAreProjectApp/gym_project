@@ -3,8 +3,8 @@
     <div class="relative bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
       <!-- Header -->
       <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="relative">
+        <div class="min-w-0 flex-1 flex items-center gap-3 mr-3">
+          <div class="relative shrink-0">
             <img
               v-if="user?.photo_profile"
               :src="user.photo_profile"
@@ -19,18 +19,19 @@
             </div>
           </div>
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-white truncate">
+            <h2 class="text-lg font-semibold text-white [overflow-wrap:anywhere]">
               {{ userFullName }}
             </h2>
-            <p class="text-blue-100 text-xs mt-0.5 truncate">
+            <p class="text-blue-100 text-xs mt-0.5 [overflow-wrap:anywhere]">
               {{ roleLabel }} · {{ user?.email }}
             </p>
           </div>
         </div>
         <button
           type="button"
+          aria-label="Cerrar detalle de usuario"
           @click="handleClose"
-          class="p-2.5 rounded-full text-white hover:text-blue-100 hover:bg-white/10 transition-colors"
+          class="directory-action shrink-0 flex items-center justify-center p-2.5 rounded-full text-white hover:text-blue-100 hover:bg-white/10 transition-colors"
         >
           <XMarkIcon class="h-5 w-5" />
         </button>
@@ -41,14 +42,14 @@
         <!-- User info section -->
         <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
           <h3 class="text-sm font-semibold text-gray-900 mb-3">Información del usuario</h3>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm [&>div]:min-w-0 [&_dd]:[overflow-wrap:anywhere]">
             <div>
               <dt class="text-gray-500">Nombre completo</dt>
               <dd class="mt-0.5 text-gray-900">{{ userFullName || 'Sin información' }}</dd>
             </div>
             <div>
               <dt class="text-gray-500">Correo electrónico</dt>
-              <dd class="mt-0.5 text-gray-900 truncate">{{ user?.email || 'Sin información' }}</dd>
+              <dd class="mt-0.5 text-gray-900">{{ user?.email || 'Sin información' }}</dd>
             </div>
             <div>
               <dt class="text-gray-500">Identificación</dt>
@@ -71,8 +72,8 @@
 
         <!-- Processes section -->
         <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
-          <div class="flex items-center justify-between mb-3">
-            <div>
+          <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+            <div class="min-w-0">
               <h3 class="text-sm font-semibold text-gray-900">Procesos del usuario</h3>
               <p class="text-xs text-gray-500 mt-0.5">
                 {{ processes.length > 0 ? `Se encontraron ${processes.length} proceso(s) asociados` : 'Este usuario no tiene procesos registrados.' }}
@@ -82,7 +83,7 @@
               v-if="processes.length > 0"
               type="button"
               @click="goToProcessList"
-              class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100"
+              class="directory-action shrink-0 inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-gray-200 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100"
             >
               Ver todos en Procesos
             </button>
@@ -102,16 +103,16 @@
             <article
               v-for="process in processes"
               :key="process.id"
-              class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 flex items-start justify-between gap-3 hover:border-blue-200 hover:bg-blue-50/40 transition-colors"
+              class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 flex flex-col sm:flex-row items-start justify-between gap-3 hover:border-blue-200 hover:bg-blue-50/40 transition-colors"
             >
               <div class="min-w-0 flex-1">
-                <h4 class="text-sm font-semibold text-blue-700 truncate">
+                <h4 class="text-sm font-semibold text-blue-700 [overflow-wrap:anywhere]">
                   {{ process.case?.type || 'Proceso sin tipo' }}
                 </h4>
-                <p class="mt-0.5 text-xs text-gray-600 truncate">
+                <p class="mt-0.5 text-xs text-gray-600 [overflow-wrap:anywhere]">
                   {{ process.subcase || 'Sin descripción' }}
                 </p>
-                <p class="mt-1 text-[11px] text-gray-500 truncate">
+                <p class="mt-1 text-[11px] text-gray-500 [overflow-wrap:anywhere]">
                   Radicado: <span class="font-medium">{{ process.ref || 'N/A' }}</span>
                   · Autoridad: <span class="font-medium">{{ process.authority || 'N/A' }}</span>
                 </p>
@@ -129,7 +130,7 @@
                 <button
                   type="button"
                   @click="goToProcessDetail(process.id)"
-                  class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium text-blue-700 bg-white border border-blue-200 hover:bg-blue-50"
+                  class="directory-action inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-medium text-blue-700 bg-white border border-blue-200 hover:bg-blue-50"
                 >
                   Ver proceso
                 </button>
@@ -248,3 +249,10 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.directory-action {
+  min-width: calc(44px / var(--app-zoom, 1));
+  min-height: calc(44px / var(--app-zoom, 1));
+}
+</style>

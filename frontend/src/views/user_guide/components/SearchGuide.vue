@@ -6,14 +6,19 @@
         v-model="searchValue"
         type="text"
         placeholder="Buscar en el manual..."
-        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        data-testid="guide-search-input"
+        aria-label="Buscar en el manual"
+        class="w-full pl-10 pr-[calc(64px/var(--app-zoom,1))] py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         @input="handleInput"
         @keyup.enter="handleSearch"
       />
       <button
         v-if="searchValue"
+        type="button"
+        data-testid="guide-search-clear"
+        aria-label="Limpiar búsqueda"
         @click="clearSearch"
-        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        class="absolute right-0 top-1/2 flex items-center justify-center transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
       >
         <XMarkIcon class="h-5 w-5" />
       </button>
