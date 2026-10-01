@@ -15,7 +15,14 @@ async function expectPhysicalTarget(locator) {
 
 async function expectNoHorizontalOverflow(locator) {
   await expect(locator).toBeVisible();
-  await expect.poll(async () => locator.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  const dimensions = await locator.evaluate(async (element) => {
+    await document.fonts.ready;
+    return {
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    };
+  });
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
 }
 
 async function openDirectoryFromDesktopSidebar(page) {
