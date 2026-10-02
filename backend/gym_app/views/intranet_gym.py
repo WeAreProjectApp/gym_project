@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from gym_app.models import LegalDocument, IntranetProfile, User
 from gym_app.serializers import LegalDocumentSerializer, IntranetProfileSerializer
+from gym_app.utils.auth_utils import is_gym_staff
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from gym_app.views.layouts.sendEmail import send_template_email
@@ -13,6 +14,12 @@ from django.conf import settings
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_legal_intranet_documents(request):
+    if not is_gym_staff(request.user):
+        return Response(
+            {'detail': 'No tienes permisos para acceder a la intranet.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     # Get all legal documents
     legal_intranet_documents = LegalDocument.objects.all()
     documents_serializer = LegalDocumentSerializer(
@@ -74,6 +81,12 @@ def create_report(request):
     - HTTP 201 Created: If the report is successfully sent via email.
     - HTTP 400 Bad Request: If there is an error processing the request.
     """
+    if not is_gym_staff(request.user):
+        return Response(
+            {'detail': 'No tienes permisos para enviar cuentas de cobro.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     try:
         # Extract form data from the request
         contract = request.data.get("contract", "")

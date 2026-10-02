@@ -125,6 +125,17 @@ sequenceDiagram
     E-->>D: Response
 ```
 
+### Autorización interna y aviso de instalación
+
+Los endpoints de intranet y creación de procesos aplican `is_gym_staff` antes de
+consultar datos internos o ejecutar efectos. Esta política compartida conserva
+roles internos heredados sin distinguir mayúsculas, indicadores administrativos
+y la bandera de abogado interno. Los controles de la SPA no sustituyen esta
+autorización del servidor. El aviso de instalación PWA permite que los punteros
+atraviesen su contenedor; sólo su botón visible participa en la interacción.
+`autoAlpha` mantiene ocultos los objetivos transparentes y los tweens se cancelan
+al desmontar el componente.
+
 ### 3.1 Rendimiento de listados
 
 Listados optimizados (2026-09-24): organizaciones y solicitudes corporativas
