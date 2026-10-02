@@ -1217,14 +1217,14 @@ class TestIntranetViews:
         assert resp.status_code == 200
 
     def test_create_report_request(self, api, law):
-        """Verify create report request."""
+        """Verify a lawyer can submit a report request."""
         api.force_authenticate(user=law)
         resp = api.post(
             reverse("create-report-request"),
             {"title": "Report", "content": "Body"},
             format="json",
         )
-        assert resp.status_code in (200, 201, 400)
+        assert resp.status_code == status.HTTP_201_CREATED
 
     def test_list_intranet_unauthenticated(self, api):
         """Verify list intranet unauthenticated."""

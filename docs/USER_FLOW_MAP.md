@@ -331,7 +331,7 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 
 ### misc-pwa-install: Instalar PWA
 - **Módulo:** misc | **Prioridad:** P4 | **Ruta:** N/A | **E2E:** ✅
-- **Descripción:** Prompt de instalación de la app como PWA
+- **Descripción:** Instalación desde el botón del aviso PWA en primera visita web, a 412×915, 835×1194, 1195×835, 1440×900 y 2560×1440. Conserva instrucciones manuales y prompt nativo; el aviso no se presenta con la aplicación instalada.
 
 ---
 
@@ -548,7 +548,7 @@ la fuente actualizada para el total es `flow-definitions.json`.
 
 ### dashboard-navigation: Navegación del sidebar
 - **Módulo:** dashboard | **Prioridad:** P2 | **Ruta:** N/A | **E2E:** ✅
-- **Descripción:** Menú lateral filtrado por rol con navegación a todos los módulos
+- **Descripción:** Menú lateral filtrado por rol con navegación a todos los módulos. La primera visita web permite abrir el menú y llegar a Procesos sin esperar la retirada del aviso PWA, tanto invisible como visible, a 412×915, 835×1194, 1195×835, 1440×900 y 2560×1440.
 
 **Ramificaciones por rol (sidebar):**
 - ├── **Lawyer:** Dashboard, Directorio, Procesos, Documentos, Gestión de Solicitudes, Manual de Usuario

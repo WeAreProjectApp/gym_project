@@ -1,6 +1,9 @@
 """Tests for intranet_gym module."""
 
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -11,14 +14,22 @@ from gym_app.models import LegalDocument, User
 
 @pytest.fixture
 def user():
-    """User."""
+    """Provide an internal lawyer for successful intranet examples."""
     return User.objects.create_user(
         email='test@example.com',
-        password='testpassword'
+        password='testpassword',
+        role='lawyer',
     )
 
 @pytest.fixture
-def legal_documents():
+def isolated_media_root(settings, tmp_path):
+    """Provide isolated file storage for intranet requests."""
+    settings.MEDIA_ROOT = str(tmp_path)
+    return tmp_path
+
+
+@pytest.fixture
+def legal_documents(isolated_media_root):
     """Create test legal documents for testing."""
     # Create a test file for each document
     test_file1 = SimpleUploadedFile(
@@ -52,6 +63,16 @@ def legal_documents():
         )
     ]
     return documents
+
+
+def _stored_media_paths():
+    """Return the relative paths stored in the isolated media root."""
+    media_root = Path(settings.MEDIA_ROOT)
+    return {
+        path.relative_to(media_root)
+        for path in media_root.rglob('*')
+        if path.is_file()
+    }
 
 @pytest.mark.django_db
 class TestIntranetGymViews:
@@ -90,6 +111,53 @@ class TestIntranetGymViews:
         
         # Assert the response
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.parametrize('role', ['client', 'basic', 'corporate_client'])
+    def test_list_documents_rejects_external_role(self, api_client, legal_documents, role):
+        """Fails if an external account can read an intranet document."""
+        external_user = User.objects.create_user(
+            email=f'{role}.intranet@example.com', password='testpassword', role=role,
+        )
+        api_client.force_authenticate(user=external_user)
+
+        response = api_client.get(reverse('list-legal-intranet-documents'))
+
+        legal_documents[0].file.open('rb')
+        try:
+            stored_bytes = legal_documents[0].file.read()
+        finally:
+            legal_documents[0].file.close()
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert 'Document 1' not in str(response.data)
+        assert stored_bytes == b'file_content'
+
+    @pytest.mark.parametrize(
+        ('role', 'flags'),
+        [
+            ('lawyer', {}),
+            ('Lawyer', {}),
+            ('admin', {}),
+            ('Admin', {}),
+            ('basic', {'is_staff': True}),
+            ('basic', {'is_superuser': True}),
+            ('basic', {'is_gym_lawyer': True}),
+        ],
+        ids=['lawyer-lower', 'lawyer-upper', 'admin-lower', 'admin-upper', 'staff', 'superuser', 'gym-lawyer'],
+    )
+    def test_list_documents_accepts_internal_actor(self, api_client, legal_documents, role, flags):
+        """Fails if an accepted internal actor loses intranet access."""
+        internal_user = User.objects.create_user(
+            email=f'{role}.{next(iter(flags), "role")}.list@example.com',
+            password='testpassword', role=role, **flags,
+        )
+        api_client.force_authenticate(user=internal_user)
+
+        response = api_client.get(reverse('list-legal-intranet-documents'))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert [document['name'] for document in response.data['documents']] == [
+            'Document 1', 'Document 2', 'Document 3',
+        ]
 
 def _make_report_data(**overrides):
     base = {
@@ -163,6 +231,68 @@ class TestCreateReport:
         
         # Assert the response
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize('role', ['client', 'basic', 'corporate_client'])
+    def test_create_report_rejects_external_role(self, api_client, legal_documents, role):
+        """Fails if an external account can send a billing report."""
+        external_user = User.objects.create_user(
+            email=f'{role}.report@example.com', password='testpassword', role=role,
+        )
+        uploaded_file = SimpleUploadedFile(
+            f'external-report-{role}.txt', b'external report bytes', content_type='text/plain',
+        )
+        api_client.force_authenticate(user=external_user)
+        media_paths_before = _stored_media_paths()
+
+        with mock.patch('gym_app.views.intranet_gym.send_template_email') as send_email:
+            response = api_client.post(
+                reverse('create-report-request'),
+                _make_report_data(**{'files[0]': uploaded_file}),
+                format='multipart',
+            )
+
+        legal_documents[0].file.open('rb')
+        try:
+            stored_bytes = legal_documents[0].file.read()
+        finally:
+            legal_documents[0].file.close()
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert len(mail.outbox) == 0
+        send_email.assert_not_called()
+        assert stored_bytes == b'file_content'
+        assert _stored_media_paths() == media_paths_before
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        ('role', 'flags'),
+        [
+            ('lawyer', {}),
+            ('Lawyer', {}),
+            ('admin', {}),
+            ('Admin', {}),
+            ('basic', {'is_staff': True}),
+            ('basic', {'is_superuser': True}),
+            ('basic', {'is_gym_lawyer': True}),
+        ],
+        ids=['lawyer-lower', 'lawyer-upper', 'admin-lower', 'admin-upper', 'staff', 'superuser', 'gym-lawyer'],
+    )
+    def test_create_report_accepts_internal_actor(self, api_client, role, flags):
+        """Fails if an accepted internal actor cannot send a billing report."""
+        internal_user = User.objects.create_user(
+            email=f'{role}.{next(iter(flags), "role")}.report@example.com',
+            password='testpassword', role=role, **flags,
+        )
+        api_client.force_authenticate(user=internal_user)
+
+        response = api_client.post(
+            reverse('create-report-request'),
+            _make_report_data(contract=f'REPORT-{role}-{next(iter(flags), "role")}'),
+            format='multipart',
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert len(mail.outbox) == 1
 
     @pytest.mark.django_db
     def test_create_report_with_user_email_confirmation(self, api_client, user):
