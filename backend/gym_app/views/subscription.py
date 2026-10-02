@@ -69,11 +69,7 @@ def generate_signature(request):
     concatenated_string = f"{reference}{amount_in_cents}{currency}{settings.WOMPI_INTEGRITY_KEY}"
     signature = hashlib.sha256(concatenated_string.encode()).hexdigest()
     
-    # Log for debugging
-    logger.info(f"Signature generation - Reference: {reference}, Amount: {amount_in_cents}, Currency: {currency}")
-    logger.info(f"Concatenated string (without key): {reference}{amount_in_cents}{currency}")
-    logger.info(f"Using integrity key: {settings.WOMPI_INTEGRITY_KEY[:20]}...")
-    logger.info(f"Generated signature: {signature}")
+    logger.info("Wompi integrity signature generated")
     
     return Response({
         'signature': signature

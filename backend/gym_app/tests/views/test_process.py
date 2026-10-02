@@ -1,6 +1,7 @@
 """Tests for process module."""
 
 import json
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +10,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from rest_framework import status
 
 from gym_app.models import (
@@ -59,7 +61,7 @@ def _create_recent_process_fixtures(user, start_index, count):
         first_stage = Stage.objects.create(status=f"First stage {index}")
         alerted_stage = Stage.objects.create(status=f"Alerted stage {index}")
         StageAlert.objects.create(stage=alerted_stage, description=f"Alert {index}")
-        process.clients.add(client)
+        process.clients.add(client, user)
         process.case_files.add(case_file)
         process.stages.add(first_stage, alerted_stage)
         recent_process = RecentProcess.objects.create(user=user, process=process)
@@ -68,6 +70,69 @@ def _create_recent_process_fixtures(user, start_index, count):
         )
         recent_processes.append(recent_process)
     return recent_processes
+
+
+def _create_recent_history_entries(
+    user,
+    lawyer,
+    case,
+    prefix,
+    count,
+    start_time,
+    grants_access,
+):
+    """Create recent entries with deterministic timestamps for access-list assertions."""
+    entries = []
+    for index in range(count):
+        process = Process.objects.create(
+            authority=f"{prefix} court {index}",
+            plaintiff=f"{prefix} plaintiff {index}",
+            defendant=f"{prefix} defendant {index}",
+            ref=f"{prefix}-{index}",
+            lawyer=lawyer,
+            case=case,
+            subcase=f"{prefix} subcase {index}",
+        )
+        if grants_access:
+            process.clients.add(user)
+        recent_process = RecentProcess.objects.create(user=user, process=process)
+        RecentProcess.objects.filter(pk=recent_process.pk).update(
+            last_viewed=start_time + timedelta(minutes=index),
+        )
+        entries.append(recent_process)
+    return entries
+
+
+def _create_assigned_shared_recent_entry(user, case, last_viewed):
+    """Create one recent process where an external assignee is also a shared client."""
+    shared_client_one = User.objects.create_user(
+        email="shared-recent-one@example.com",
+        password="testpassword",
+        role="client",
+    )
+    shared_client_two = User.objects.create_user(
+        email="shared-recent-two@example.com",
+        password="testpassword",
+        role="client",
+    )
+    shared_client_three = User.objects.create_user(
+        email="shared-recent-three@example.com",
+        password="testpassword",
+        role="client",
+    )
+    process = Process.objects.create(
+        authority="Assigned Shared Court",
+        plaintiff="Assigned Shared Plaintiff",
+        defendant="Assigned Shared Defendant",
+        ref="ASSIGNED-SHARED-RECENT",
+        lawyer=user,
+        case=case,
+        subcase="Assigned shared matter",
+    )
+    process.clients.add(user, shared_client_one, shared_client_two, shared_client_three)
+    recent_process = RecentProcess.objects.create(user=user, process=process)
+    RecentProcess.objects.filter(pk=recent_process.pk).update(last_viewed=last_viewed)
+    return process
 
 
 def _create_process_list_fixtures(lawyer, start_index, count):
@@ -626,6 +691,7 @@ class TestProcessViews:
                 lawyer=lawyer_user,
                 case=case_type
             )
+            p.clients.add(client_user)
             rp = RecentProcess.objects.create(user=client_user, process=p)
             # Forzar un orden consistente incrementando last_viewed
             rp.last_viewed = rp.last_viewed.replace(microsecond=i)
@@ -672,6 +738,209 @@ class TestProcessViews:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.data['error'] == 'Process not found'
+
+    def test_update_recent_process_rejects_unrelated_client(
+        self,
+        api_client,
+        client_user,
+        process,
+        lawyer_user,
+        case_type,
+    ):
+        """Fails if an unrelated client can create a recent-process entry."""
+        retained_recent = RecentProcess.objects.create(user=client_user, process=process)
+        foreign_process = Process.objects.create(
+            authority="Private Court",
+            plaintiff="Private Plaintiff",
+            defendant="Private Defendant",
+            ref="PRIVATE-RECENT-001",
+            lawyer=lawyer_user,
+            case=case_type,
+            subcase="Private matter",
+        )
+        api_client.force_authenticate(user=client_user)
+        url = reverse("update-recent-process", kwargs={"process_id": foreign_process.id})
+
+        response = api_client.post(url, {}, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == "No tienes permiso para consultar este proceso."
+        assert RecentProcess.objects.filter(user=client_user, process=foreign_process).exists() is False
+        assert RecentProcess.objects.filter(pk=retained_recent.pk, process=process).exists() is True
+
+    @freeze_time("2026-10-02 12:00:00")
+    def test_update_recent_process_preserves_timestamp_after_client_access_is_revoked(
+        self,
+        api_client,
+        client_user,
+        process,
+    ):
+        """Fails if revoking process access still refreshes a recent timestamp."""
+        recent_process = RecentProcess.objects.create(user=client_user, process=process)
+        saved_last_viewed = timezone.now() - timedelta(days=1)
+        RecentProcess.objects.filter(pk=recent_process.pk).update(last_viewed=saved_last_viewed)
+        recent_process.refresh_from_db()
+        saved_last_viewed = recent_process.last_viewed
+        process.clients.remove(client_user)
+        api_client.force_authenticate(user=client_user)
+        url = reverse("update-recent-process", kwargs={"process_id": process.id})
+
+        response = api_client.post(url, {}, format="json")
+
+        recent_process.refresh_from_db()
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == "No tienes permiso para consultar este proceso."
+        assert RecentProcess.objects.filter(user=client_user, process=process).count() == 1
+        assert recent_process.process_id == process.id
+        assert recent_process.last_viewed == saved_last_viewed
+
+    def test_recent_processes_excludes_process_after_client_access_is_revoked(
+        self,
+        api_client,
+        client_user,
+        process,
+        lawyer_user,
+        case_type,
+    ):
+        """Fails if a revoked client still receives a process from recent history."""
+        retained_recent = RecentProcess.objects.create(user=client_user, process=process)
+        revoked_process = Process.objects.create(
+            authority="Revoked Court",
+            plaintiff="Revoked Plaintiff",
+            defendant="Revoked Defendant",
+            ref="REVOKED-RECENT-001",
+            lawyer=lawyer_user,
+            case=case_type,
+            subcase="Revoked matter",
+        )
+        revoked_process.clients.add(client_user)
+        RecentProcess.objects.create(user=client_user, process=revoked_process)
+        revoked_process.clients.remove(client_user)
+        api_client.force_authenticate(user=client_user)
+
+        response = api_client.get(reverse("recent-processes"))
+
+        response_process_ids = [item["process"]["id"] for item in response.data]
+        assert response.status_code == status.HTTP_200_OK
+        assert retained_recent.process_id in response_process_ids
+        assert revoked_process.id not in response_process_ids
+
+    def test_recent_processes_include_assigned_basic_lawyer(
+        self,
+        api_client,
+        case_type,
+    ):
+        """Fails if a non-internal assigned lawyer loses recent-process access."""
+        assigned_lawyer = User.objects.create_user(
+            email="assigned-basic-lawyer@example.com",
+            password="testpassword",
+            role="basic",
+        )
+        assigned_process = Process.objects.create(
+            authority="Assigned Court",
+            plaintiff="Assigned Plaintiff",
+            defendant="Assigned Defendant",
+            ref="ASSIGNED-RECENT-001",
+            lawyer=assigned_lawyer,
+            case=case_type,
+            subcase="Assigned matter",
+        )
+        RecentProcess.objects.create(user=assigned_lawyer, process=assigned_process)
+        api_client.force_authenticate(user=assigned_lawyer)
+
+        response = api_client.get(reverse("recent-processes"))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert assigned_process.id in [item["process"]["id"] for item in response.data]
+
+    @pytest.mark.parametrize(
+        "internal_attributes",
+        [
+            pytest.param({"role": "lawyer", "is_gym_lawyer": False, "is_staff": False, "is_superuser": False}, id="role-lawyer"),
+            pytest.param({"role": "basic", "is_gym_lawyer": True, "is_staff": False, "is_superuser": False}, id="gym-lawyer"),
+            pytest.param({"role": "basic", "is_gym_lawyer": False, "is_staff": True, "is_superuser": False}, id="staff"),
+            pytest.param({"role": "basic", "is_gym_lawyer": False, "is_staff": False, "is_superuser": True}, id="superuser"),
+        ],
+    )
+    def test_recent_processes_include_internal_access_variants(
+        self,
+        api_client,
+        case_type,
+        lawyer_user,
+        internal_attributes,
+    ):
+        """Fails if an internal access variant loses recent-process visibility."""
+        internal_user = User.objects.create_user(
+            email=f"recent-internal-{internal_attributes['role']}-{internal_attributes['is_gym_lawyer']}-{internal_attributes['is_staff']}-{internal_attributes['is_superuser']}@example.com",
+            password="testpassword",
+            **internal_attributes,
+        )
+        internal_process = Process.objects.create(
+            authority="Internal Court",
+            plaintiff="Internal Plaintiff",
+            defendant="Internal Defendant",
+            ref="INTERNAL-RECENT-001",
+            lawyer=lawyer_user,
+            case=case_type,
+            subcase="Internal matter",
+        )
+        RecentProcess.objects.create(user=internal_user, process=internal_process)
+        api_client.force_authenticate(user=internal_user)
+
+        response = api_client.get(reverse("recent-processes"))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert internal_process.id in [item["process"]["id"] for item in response.data]
+
+
+@pytest.mark.django_db
+@freeze_time("2026-10-02 12:00:00")
+def test_recent_processes_filters_access_before_the_ten_item_limit(
+    api_client,
+    client_user,
+    lawyer_user,
+    case_type,
+):
+    """Fails if newer inaccessible history displaces authorized recent processes."""
+    visible_start = timezone.now() - timedelta(days=1)
+    _create_recent_history_entries(
+        client_user, lawyer_user, case_type, "INACCESSIBLE-RECENT", 11,
+        visible_start + timedelta(days=1), False,
+    )
+    _create_recent_history_entries(
+        client_user, lawyer_user, case_type, "AUTHORIZED-RECENT", 9,
+        visible_start, True,
+    )
+    assigned_shared_process = _create_assigned_shared_recent_entry(
+        client_user,
+        case_type,
+        visible_start + timedelta(minutes=9),
+    )
+    expected_process_ids = list(
+        RecentProcess.objects.filter(
+            user=client_user,
+            process__clients=client_user,
+        )
+        .order_by("-last_viewed")
+        .values_list("process_id", flat=True)
+    )
+    inaccessible_process_ids = set(
+        RecentProcess.objects.filter(
+            user=client_user,
+            process__ref__startswith="INACCESSIBLE-RECENT",
+        ).values_list("process_id", flat=True)
+    )
+    api_client.force_authenticate(user=client_user)
+
+    response = api_client.get(reverse("recent-processes"))
+
+    response_process_ids = [item["process"]["id"] for item in response.data]
+    assert response.status_code == status.HTTP_200_OK
+    assert response_process_ids == expected_process_ids
+    assert len(response_process_ids) == 10
+    assert len(response_process_ids) == len(set(response_process_ids))
+    assert response_process_ids.count(assigned_shared_process.id) == 1
+    assert set(response_process_ids).isdisjoint(inaccessible_process_ids)
 
 
 # ======================================================================
@@ -1153,16 +1422,16 @@ def test_recent_processes_have_constant_query_budget(api_client, client_user):
 
     with CaptureQueriesContext(connection) as single_row_queries:
         single_row_response = api_client.get(url)
-    _create_recent_process_fixtures(client_user, 1, 9)
-    with CaptureQueriesContext(connection) as ten_row_queries:
-        ten_row_response = api_client.get(url)
+    _create_recent_process_fixtures(client_user, 1, 49)
+    with CaptureQueriesContext(connection) as fifty_row_queries:
+        fifty_row_response = api_client.get(url)
 
     assert single_row_response.status_code == status.HTTP_200_OK
     assert len(single_row_response.data) == 1
-    assert ten_row_response.status_code == status.HTTP_200_OK
-    assert len(ten_row_response.data) == 10
-    assert len(single_row_queries) == len(ten_row_queries)
-    assert len(ten_row_queries) <= MAX_RECENT_PROCESS_LIST_QUERIES
+    assert fifty_row_response.status_code == status.HTTP_200_OK
+    assert len(fifty_row_response.data) == 10
+    assert len(single_row_queries) == len(fifty_row_queries)
+    assert len(fifty_row_queries) <= MAX_RECENT_PROCESS_LIST_QUERIES
 
 
 @pytest.mark.django_db
@@ -1234,13 +1503,15 @@ def test_recent_processes_serialize_related_models(api_client, client_user):
     assert {
         "case": nested_process["case"]["type"],
         "lawyer": nested_process["lawyer"]["email"],
-        "client": nested_process["clients"][0]["email"],
         "file": nested_process["case_files"][0]["file"],
     } == {
         "case": "Recent case 11",
         "lawyer": "recent-lawyer-11@example.com",
-        "client": "recent-client-11@example.com",
         "file": expected_file_url,
+    }
+    assert {client["email"] for client in nested_process["clients"]} == {
+        "client@example.com",
+        "recent-client-11@example.com",
     }
 
 
