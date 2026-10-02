@@ -2,6 +2,16 @@
 
 ## 1. Current State
 
+### Permisos y relaciones — mejora transversal (2026-10-02)
+
+Rama propia desde `master`: `fix/02102026-improvement-legal-relationships`.
+Tres causas: autorización interna para mutar novedades, propiedad en los dos
+pasos de finalización inicial de solicitudes y consultas constantes en el
+selector de relaciones. Una sola QA backend/gate; el certificado se vincula al
+commit final de la ronda en el registro de mejoras del toolkit. Se conserva el trabajo separado del PR #135.
+Sin migraciones, dependencias nuevas ni despliegue. Las obligaciones fuera
+del cupo y las hipótesis responsive continúan pendientes.
+
 ### Privilegios y directorio — mejora transversal (2026-10-01)
 
 Ronda `i1-auth-directory-20261001` en worktree propio, desde la base activa
