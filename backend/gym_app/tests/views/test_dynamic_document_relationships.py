@@ -27,6 +27,7 @@ def _picker_visible_document(user, creator, visibility):
         requires_signature=True,
     )
     if visibility in {"signed", "unsigned"}:
+        DocumentSignature.objects.create(document=document, signer=creator, signed=False)
         DocumentSignature.objects.create(document=document, signer=user, signed=visibility == "signed")
     if visibility == "permission":
         DocumentVisibilityPermission.objects.create(document=document, user=user, granted_by=creator)
