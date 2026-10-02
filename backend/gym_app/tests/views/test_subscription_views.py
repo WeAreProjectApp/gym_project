@@ -2,6 +2,7 @@
 import hashlib
 import hmac
 import json
+import logging
 import unittest.mock as mock
 from datetime import date
 from decimal import Decimal
@@ -75,19 +76,31 @@ class TestWompiConfigAndSignature:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "amount_in_cents and reference are required" in response.data["error"]
 
-    def test_generate_signature_success(self, api_client, subscription_user, wompi_settings):
-        """Verify generate signature success."""
+    def test_generate_signature_emits_safe_log_event(self, api_client, subscription_user, wompi_settings, caplog):
+        """Fails if generating a signature logs payment signing material."""
         api_client.force_authenticate(user=subscription_user)
         url = reverse("subscription-generate-signature")
 
-        payload = {"amount_in_cents": 5000, "currency": "COP", "reference": "REF999"}
+        wompi_settings.WOMPI_INTEGRITY_KEY = "distinct-integrity-key-9876543210"
+        payload = {"amount_in_cents": 5000, "currency": "COP", "reference": "REF-UNIQUE-999"}
         expected_concatenated = f"{payload['reference']}{payload['amount_in_cents']}{payload['currency']}{wompi_settings.WOMPI_INTEGRITY_KEY}"
         expected_signature = hashlib.sha256(expected_concatenated.encode()).hexdigest()
 
-        response = api_client.post(url, payload, format="json")
+        with caplog.at_level(logging.INFO, logger="gym_app.views.subscription"):
+            response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["signature"] == expected_signature
+        module_messages = [
+            record.getMessage()
+            for record in caplog.records
+            if record.name == "gym_app.views.subscription"
+        ]
+        assert module_messages == ["Wompi integrity signature generated"]
+        assert wompi_settings.WOMPI_INTEGRITY_KEY not in caplog.text
+        assert wompi_settings.WOMPI_INTEGRITY_KEY[:20] not in caplog.text
+        assert expected_concatenated not in caplog.text
+        assert expected_signature not in caplog.text
 
 
 @pytest.mark.django_db

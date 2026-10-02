@@ -777,29 +777,81 @@ class TestUserSignatureAndDocumentsByUser:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_get_user_signature_present_and_absent(self, api_client, signer_user):
-        """Verify get user signature present and absent."""
+    def test_get_user_signature_returns_uploaded_owner_signature_details(self, api_client, signer_user):
+        """Fails if an owner cannot retrieve their uploaded signature details."""
         api_client.force_authenticate(user=signer_user)
 
-        # Caso sin firma
         url = reverse("get-user-signature", kwargs={"user_id": signer_user.id})
-        response = api_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["has_signature"] is False
-
-        # Crear firma y volver a consultar
-        UserSignature.objects.create(user=signer_user, signature_image="signatures/test.png", method="upload")
+        UserSignature.objects.create(
+            user=signer_user,
+            signature_image="signatures/test.png",
+            method="upload",
+            ip_address="198.51.100.24",
+        )
         response = api_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data["has_signature"] is True
-        assert "signature" in response.data
+        assert response.data["signature"]["user"] == signer_user.id
+        assert response.data["signature"]["method"] == "upload"
+        assert "signature_image" in response.data["signature"]
+        assert response.data["signature"]["ip_address"] == "198.51.100.24"
 
-    def test_get_user_signature_user_not_found(self, api_client, signer_user):
-        """Verify get user signature user not found."""
+    def test_get_user_signature_rejects_foreign_nonexistent_user_id(self, api_client, signer_user):
+        """Fails if a foreign nonexistent ID reveals whether a user exists."""
         api_client.force_authenticate(user=signer_user)
         url = reverse("get-user-signature", kwargs={"user_id": 9999})
         response = api_client.get(url)
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data == {"error": "No tienes permiso para consultar esta firma."}
+
+    def test_get_user_signature_unauthenticated(self, api_client, signer_user):
+        """Fails if anonymous callers can retrieve a user's signature."""
+        url = reverse("get-user-signature", kwargs={"user_id": signer_user.id})
+
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.parametrize(
+        "foreign_attributes",
+        [
+            pytest.param({"role": "client"}, id="client"),
+            pytest.param({"role": "lawyer"}, id="lawyer"),
+            pytest.param({"role": "admin"}, id="admin-role"),
+            pytest.param({"role": "basic", "is_staff": True}, id="staff"),
+            pytest.param({"role": "basic", "is_superuser": True}, id="superuser"),
+        ],
+    )
+    def test_get_user_signature_rejects_foreign_authenticated_roles(
+        self,
+        api_client,
+        signer_user,
+        foreign_attributes,
+    ):
+        """Fails if a non-owner role can retrieve another user's signature."""
+        foreign_user = User.objects.create_user(
+            email=(
+                "foreign-signature-"
+                f"{foreign_attributes['role']}-"
+                f"{foreign_attributes.get('is_staff', False)}-"
+                f"{foreign_attributes.get('is_superuser', False)}@example.com"
+            ),
+            password="testpassword",
+            **foreign_attributes,
+        )
+        UserSignature.objects.create(
+            user=signer_user,
+            signature_image="signatures/private-target.png",
+            method="upload",
+            ip_address="198.51.100.25",
+        )
+        api_client.force_authenticate(user=foreign_user)
+        url = reverse("get-user-signature", kwargs={"user_id": signer_user.id})
+
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data == {"error": "No tienes permiso para consultar esta firma."}
 
     def test_get_user_signature_internal_error(self, api_client, signer_user, monkeypatch):
         """Verify get user signature internal error."""
@@ -1523,11 +1575,12 @@ class TestGetUserSignature:
         assert resp.status_code == 200
         assert resp.data["has_signature"] is False
 
-    def test_user_signature_not_found(self, api, law):
-        """Verify user signature not found."""
+    def test_user_signature_rejects_foreign_nonexistent_user_id(self, api, law):
+        """Fails if a foreign nonexistent signature reveals user existence."""
         api.force_authenticate(user=law)
         resp = api.get(reverse("get-user-signature", args=[999999]))
-        assert resp.status_code == 404
+        assert resp.status_code == 403
+        assert resp.data == {"error": "No tienes permiso para consultar esta firma."}
 
 # -- get_pending_signatures --
 @pytest.mark.django_db

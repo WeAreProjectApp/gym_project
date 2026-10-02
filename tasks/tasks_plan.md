@@ -2,6 +2,14 @@
 
 ## 1. Feature Status
 
+**2026-10-02 — Acceso privado:** ronda transversal de tres causas. El historial
+de procesos exige autorización de objeto al registrar vistas y filtra permisos
+actuales antes del límite de diez. La firma personal sólo se consulta por el
+propietario; un ID ajeno devuelve 403 antes del lookup. Las firmas de pagos
+mantienen su respuesta sin registrar clave, prefijo ni digest. Validación y
+entrega mediante QA conjunta y PR independiente hacia `master`.
+
+
 **2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
 registro/perfil asignen autoridad, leer datos largos completos en el directorio
 y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que
