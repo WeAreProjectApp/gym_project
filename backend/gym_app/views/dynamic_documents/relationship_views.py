@@ -32,10 +32,49 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Q
-from gym_app.models.dynamic_document import DynamicDocument, DocumentRelationship
+from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
+from django.db.models.functions import Coalesce
+from gym_app.models.dynamic_document import (
+    DynamicDocument, DocumentRelationship, DocumentSignature, DocumentVisibilityPermission,
+)
 from gym_app.serializers.dynamic_document import DynamicDocumentSerializer, DocumentRelationshipSerializer
 from gym_app.views.dynamic_documents.permissions import require_document_visibility
+
+
+def _relationship_visibility_queryset(user):
+    """Resolve the existing visibility predicates without per-document queries."""
+    return DynamicDocument.objects.annotate(
+        _relationship_is_signer=Exists(DocumentSignature.objects.filter(
+            document_id=OuterRef('pk'), signer_id=user.pk,
+        )),
+        _relationship_has_visibility=Exists(DocumentVisibilityPermission.objects.filter(
+            document_id=OuterRef('pk'), user_id=user.pk,
+        )),
+    )
+
+
+def _can_view_for_relationship(document, user):
+    """Preserve can_view's policy, including unsigned signers and legacy roles."""
+    return (
+        document.is_lawyer(user)
+        or document.created_by_id == user.pk
+        or document._relationship_is_signer
+        or document.is_public
+        or document._relationship_has_visibility
+    )
+
+
+class AvailableRelationshipDocumentSerializer(DynamicDocumentSerializer):
+    """Keep the complete response while consuming this endpoint's annotations."""
+
+    def get_can_view(self, obj):
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            return False
+        return _can_view_for_relationship(obj, request.user)
+
+    def get_relationships_count(self, obj):
+        return obj._relationship_count
 
 
 @api_view(['GET'])
@@ -112,10 +151,10 @@ def list_available_documents_for_relationship(request, document_id):
     - Documents already related to this document
     """
     try:
-        source_document = DynamicDocument.objects.get(pk=document_id)
+        source_document = _relationship_visibility_queryset(request.user).get(pk=document_id)
         
         # Check if user can view this document
-        if not source_document.can_view(request.user):
+        if not _can_view_for_relationship(source_document, request.user):
             return Response(
                 {'detail': 'You do not have permission to view this document.'}, 
                 status=status.HTTP_403_FORBIDDEN
@@ -130,32 +169,47 @@ def list_available_documents_for_relationship(request, document_id):
             allowed_states.extend(['PendingSignatures', 'FullySigned'])
 
         # Get documents that belong to the user and are in allowed states.
-        user_documents = DynamicDocument.objects.filter(
+        user_documents = _relationship_visibility_queryset(request.user).filter(
             Q(created_by=request.user) | Q(assigned_to=request.user),
             state__in=allowed_states
+        ).exclude(pk=source_document.pk)
+
+        if not source_document.is_lawyer(request.user):
+            user_documents = user_documents.filter(
+                Q(created_by_id=request.user.pk)
+                | Q(is_public=True)
+                | Q(_relationship_is_signer=True)
+                | Q(_relationship_has_visibility=True)
+            )
+
+        existing_relationships = DocumentRelationship.objects.filter(
+            Q(source_document_id=source_document.pk, target_document_id=OuterRef('pk'))
+            | Q(source_document_id=OuterRef('pk'), target_document_id=source_document.pk)
         )
-        
-        available_documents = []
-        
-        for doc in user_documents:
-            # Skip the source document itself
-            if doc.id == source_document.id:
-                continue
-                
-            # Double-check if user can view this document (additional security)
-            if not doc.can_view(request.user):
-                continue
-            
-            # Check if already related - Only exclude if EXACT same relationship exists
-            existing_relationship = DocumentRelationship.objects.filter(
-                Q(source_document=source_document, target_document=doc) |
-                Q(source_document=doc, target_document=source_document)
-            ).exists()
-            
-            if not existing_relationship:
-                available_documents.append(doc)
-        
-        serializer = DynamicDocumentSerializer(available_documents, many=True, context={'request': request})
+        outgoing_counts = DocumentRelationship.objects.filter(
+            source_document_id=OuterRef('pk'),
+        ).order_by().values('source_document_id').annotate(total=Count('pk')).values('total')
+        incoming_counts = DocumentRelationship.objects.filter(
+            target_document_id=OuterRef('pk'),
+        ).order_by().values('target_document_id').annotate(total=Count('pk')).values('total')
+
+        available_documents = user_documents.annotate(
+            _already_related=Exists(existing_relationships),
+            _relationship_count=(
+                Coalesce(Subquery(outgoing_counts, output_field=IntegerField()), 0)
+                + Coalesce(Subquery(incoming_counts, output_field=IntegerField()), 0)
+            ),
+        ).filter(_already_related=False).select_related(
+            'created_by', 'assigned_to', 'managed_by',
+        ).prefetch_related(
+            'variables', 'tags',
+            Prefetch('signatures', queryset=DocumentSignature.objects.select_related('signer')),
+            'payment_records',
+        )
+
+        serializer = AvailableRelationshipDocumentSerializer(
+            available_documents, many=True, context={'request': request},
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
         
     except DynamicDocument.DoesNotExist:
@@ -338,5 +392,4 @@ def delete_document_relationship(request, relationship_id):
             {'detail': 'Relationship not found.'}, 
             status=status.HTTP_404_NOT_FOUND
         )
-
 

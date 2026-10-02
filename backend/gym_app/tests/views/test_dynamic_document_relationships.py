@@ -1,12 +1,130 @@
 """Tests for dynamic_document_relationships module."""
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework import status
 
-from gym_app.models import DocumentRelationship, DynamicDocument
+from gym_app.models import (
+    DocumentPaymentRecord,
+    DocumentRelationship,
+    DocumentSignature,
+    DocumentVariable,
+    DocumentVisibilityPermission,
+    DynamicDocument,
+)
+from gym_app.serializers.dynamic_document import DynamicDocumentSerializer
 
 User = get_user_model()
+
+
+def _picker_visible_document(user, creator, visibility):
+    """Create each existing visibility route without changing the assigned-owner rule."""
+    created_by = {"creator": user}.get(visibility, creator)
+    document = DynamicDocument.objects.create(
+        title="Visible target", content="<p>Full terms</p>", state="Completed",
+        created_by=created_by, assigned_to=user, is_public=visibility == "public",
+        requires_signature=True,
+    )
+    if visibility in {"signed", "unsigned"}:
+        DocumentSignature.objects.create(document=document, signer=user, signed=visibility == "signed")
+    if visibility == "permission":
+        DocumentVisibilityPermission.objects.create(document=document, user=user, granted_by=creator)
+    DocumentVariable.objects.create(document=document, name_es="Objeto", summary_field="object", value="Representation")
+    counterpart = DynamicDocument.objects.create(title="Other", content="<p>Other</p>", created_by=creator)
+    DocumentRelationship.objects.create(source_document=document, target_document=counterpart, created_by=creator)
+    DocumentRelationship.objects.create(source_document=counterpart, target_document=document, created_by=creator)
+    return document
+
+
+def _picker_expected_payload(document, user):
+    """Use the established serializer on a fresh, unannotated document instance."""
+    request = RequestFactory().get("/")
+    request.user = user
+    original = DynamicDocument.objects.get(pk=document.pk)
+    return DynamicDocumentSerializer(original, context={"request": request}).data
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("visibility", ["creator", "signed", "unsigned", "permission", "public"])
+def test_relationship_picker_preserves_visible_document_payload(api_client, client_user, other_user, visibility):
+    """Fails if optimized selection changes visibility or any field of the established serializer."""
+    source = DynamicDocument.objects.create(title="Source", content="<p>Source</p>", state="Completed", created_by=client_user)
+    document = _picker_visible_document(client_user, other_user, visibility)
+    expected = _picker_expected_payload(document, client_user)
+    api_client.force_authenticate(user=client_user)
+    response = api_client.get(reverse("list-available-documents-for-relationship", kwargs={"document_id": source.pk}))
+    assert response.status_code == 200
+    assert response.data == [expected]
+    assert response.data[0]["summary_object"] == "Representation"
+    assert response.data[0]["relationships_count"] == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("flag", ["1", "true", "yes", "TRUE", "Yes"])
+def test_relationship_picker_preserves_formalization_states(api_client, client_user, flag):
+    """Fails if a supported formalization flag loses pending or signed targets and their payment summary."""
+    source = DynamicDocument.objects.create(title="Source", content="<p>Source</p>", state="PendingSignatures", created_by=client_user)
+    pending = DynamicDocument.objects.create(title="Pending", content="<p>Pending</p>", state="PendingSignatures", created_by=client_user)
+    signed = DynamicDocument.objects.create(title="Signed", content="<p>Signed</p>", state="FullySigned", created_by=client_user)
+    DocumentVariable.objects.create(document=signed, name_es="Cuotas", summary_field="payment_installments", value="2")
+    DocumentPaymentRecord.objects.create(document=signed, installment_number=1, file="picker/signed.pdf", status="accepted", amount="12.00")
+    api_client.force_authenticate(user=client_user)
+    url = reverse("list-available-documents-for-relationship", kwargs={"document_id": source.pk})
+    response = api_client.get(f"{url}?allow_pending_signatures={flag}")
+    rows = {row["id"]: row for row in response.data}
+    assert response.status_code == 200
+    assert set(rows) == {pending.pk, signed.pk}
+    assert rows[signed.pk]["payments_summary"] == {
+        "accepted_count": 1, "in_review": False, "next_uploadable": 2, "total_amount_accepted": "12.00",
+    }
+
+
+@pytest.mark.django_db
+def test_relationship_picker_visible_foreign_source_keeps_owned_universe(api_client, client_user, other_user):
+    """Fails if source ownership is newly required or a visible foreign target enters the picker."""
+    source = DynamicDocument.objects.create(title="Foreign source", content="<p>Source</p>", state="Completed", created_by=other_user, is_public=True)
+    own = DynamicDocument.objects.create(title="Own", content="<p>Own</p>", state="Completed", created_by=client_user)
+    DynamicDocument.objects.create(title="Foreign public", content="<p>Other</p>", state="Completed", created_by=other_user, is_public=True)
+    api_client.force_authenticate(user=client_user)
+    response = api_client.get(reverse("list-available-documents-for-relationship", kwargs={"document_id": source.pk}))
+    assert response.status_code == 200
+    assert [row["id"] for row in response.data] == [own.pk]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("source_visibility", ["unsigned", "permission"])
+def test_relationship_picker_preserves_source_visibility(api_client, client_user, other_user, source_visibility):
+    """Fails if source visibility no longer accepts an unsigned signer or explicit permission."""
+    source = _picker_visible_document(client_user, other_user, source_visibility)
+    own = DynamicDocument.objects.create(title="Own", content="<p>Own</p>", state="Completed", created_by=client_user)
+    api_client.force_authenticate(user=client_user)
+    response = api_client.get(reverse("list-available-documents-for-relationship", kwargs={"document_id": source.pk}))
+    assert response.status_code == 200
+    assert [row["id"] for row in response.data] == [own.pk]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("actor_fields", "expected_status"),
+    [
+        ({"role": "lawyer"}, 200), ({"role": "Lawyer"}, 403),
+        ({"role": "admin"}, 200), ({"role": "Admin"}, 403),
+        ({"role": "client", "is_gym_lawyer": True}, 200),
+        ({"role": "client", "is_staff": True}, 200),
+        ({"role": "client", "is_superuser": True}, 200),
+    ],
+    ids=["lawyer", "legacy-lawyer", "admin", "legacy-admin", "gym-lawyer", "staff", "superuser"],
+)
+def test_relationship_picker_preserves_internal_source_policy(api_client, other_user, actor_fields, expected_status):
+    """Fails if the performance change silently normalizes the existing document role policy."""
+    actor = User.objects.create_user(email="source-policy@example.com", password=None, **actor_fields)
+    source = DynamicDocument.objects.create(title="Private source", content="<p>Private</p>", created_by=other_user)
+    api_client.force_authenticate(user=actor)
+    response = api_client.get(reverse("list-available-documents-for-relationship", kwargs={"document_id": source.pk}))
+    assert response.status_code == expected_status
+
+
 @pytest.fixture
 def client_user():
     """Client user."""
