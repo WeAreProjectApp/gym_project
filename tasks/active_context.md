@@ -2,6 +2,19 @@
 
 ## 1. Current State
 
+### Precargas de pagos, carpetas y borradores — mejora transversal (2026-10-03)
+
+Ronda `i5-query-preloads-20261003` en worktree propio, con PR independiente hacia
+`master` elegido por el operador. Tres causas seleccionadas por el motor común:
+autores de cuentas de cobro, documentos anidados de carpetas y recuperación de
+borradores de servicios. Se conserva el contrato actual y se elimina trabajo
+por elemento; los tests de la ronda protegen constancia de consultas, datos
+anidados, serialización sin SQL y los permisos existentes. Los presupuestos
+absolutos que el arreglo localizado no alcance quedan abiertos: no se amplían
+límites ni se declara verificación integral. La evidencia de ejecución y entrega
+se conserva en `2026-10-03-gym_project-improvement-pass-query-preloads-i5.md` del
+toolkit. Sin migraciones ni despliegue.
+
 ### Privilegios y directorio — mejora transversal (2026-10-01)
 
 Ronda `i1-auth-directory-20261001` en worktree propio, desde la base activa

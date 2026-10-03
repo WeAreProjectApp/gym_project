@@ -158,6 +158,17 @@ sin `to_attr`, permite que `responses.count()` reutilice la caché de la relaci�
 Estos contratos sin paginación de procesos/respuestas mantienen su payload;
 la constancia de consultas no impone un límite de memoria o tamaño de respuesta.
 
+Las lecturas de cuentas de cobro unen el autor dentro de la precarga de registros.
+Las carpetas precargan sus documentos con el plan documental compartido; el
+detalle verifica primero al propietario y conserva la serialización sin contexto
+de request. Las búsquedas de borradores de servicios reutilizan el queryset de
+detalle: archivos con su campo y respuestas de abogados con su autor se unen
+dentro de las precargas; los adjuntos de esas respuestas permanecen precargados.
+Estos cambios eliminan consultas por elemento sin reducir el payload. El número
+constante de consultas no acredita por sí solo los presupuestos absolutos:
+carpetas y borradores mantienen esa obligación abierta en la ronda
+`i5-query-preloads-20261003` del toolkit.
+
 Las organizaciones para crear solicitudes unen su corporativo desde la membresía.
 El listado de membresías usa Prefetch de organizaciones anotadas, sin un
 select_related competidor, y conserva el orden de ingreso de las membresías.
