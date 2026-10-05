@@ -7,6 +7,7 @@ from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db import IntegrityError, models, transaction
+from django.db.models import Prefetch
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -355,9 +356,15 @@ def _request_queryset(detail=True):
     if detail:
         qs = qs.prefetch_related(
             "answers",
-            "field_files__field",
-            "lawyer_responses__responder",
-            "lawyer_responses__files",
+            Prefetch(
+                "field_files",
+                queryset=ServiceRequestFieldFile.objects.select_related("field"),
+            ),
+            Prefetch(
+                "lawyer_responses",
+                queryset=ServiceRequestLawyerResponse.objects.select_related("responder")
+                .prefetch_related("files"),
+            ),
         )
     return qs
 
@@ -415,7 +422,7 @@ def get_service_detail(request, service_id):
 
     serializer = ServiceSerializer(service, context={"request": request})
 
-    draft = ServiceRequest.objects.filter(
+    draft = _request_queryset().filter(
         service=service,
         requester=request.user,
         is_submitted=False,
@@ -645,7 +652,7 @@ def save_or_submit_service_request(request):
 @permission_classes([IsAuthenticated])
 def get_latest_service_draft(request, service_id):
     service = get_object_or_404(Service, id=service_id)
-    draft = ServiceRequest.objects.filter(
+    draft = _request_queryset().filter(
         service=service,
         requester=request.user,
         is_submitted=False,

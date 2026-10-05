@@ -1392,10 +1392,10 @@ class TestConfirmationEmail:
 
     @patch("gym_app.views.legal_request.send_template_email")
     def test_send_confirmation_success(
-        self, mock_send, api_client, lawyer_user, legal_request
+        self, mock_send, api_client, client_user, legal_request
     ):
         """Lines 378-398: successful email send."""
-        api_client.force_authenticate(user=lawyer_user)
+        api_client.force_authenticate(user=client_user)
         url = reverse("send-confirmation-email")
         resp = api_client.post(
             url, {"legal_request_id": legal_request.id}, format="json"
@@ -1405,10 +1405,10 @@ class TestConfirmationEmail:
 
     @patch("gym_app.views.legal_request.send_template_email", side_effect=Exception("SMTP"))
     def test_send_confirmation_email_failure(
-        self, mock_send, api_client, lawyer_user, legal_request
+        self, mock_send, api_client, client_user, legal_request
     ):
         """Lines 400-405: email sending fails."""
-        api_client.force_authenticate(user=lawyer_user)
+        api_client.force_authenticate(user=client_user)
         url = reverse("send-confirmation-email")
         resp = api_client.post(
             url, {"legal_request_id": legal_request.id}, format="json"

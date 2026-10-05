@@ -20,6 +20,120 @@ from gym_app.models import (
     User,
 )
 
+REQUEST_OWNERSHIP_ACTORS = [
+    {"role": "client"}, {"role": "basic"}, {"role": "corporate_client"},
+    {"role": "lawyer"}, {"role": "Lawyer"}, {"role": "admin"}, {"role": "Admin"},
+    {"role": "client", "is_gym_lawyer": True},
+    {"role": "client", "is_staff": True},
+    {"role": "client", "is_superuser": True},
+]
+REQUEST_OWNERSHIP_IDS = ["client", "basic", "corporate", "lawyer", "legacy-lawyer", "admin", "legacy-admin", "gym-lawyer", "staff", "superuser"]
+
+
+@pytest.fixture(params=REQUEST_OWNERSHIP_ACTORS, ids=REQUEST_OWNERSHIP_IDS)
+def foreign_request_actor(request):
+    """Every external or internal identity is still a non-owner of this request."""
+    return User.objects.create_user(email="foreign-request@example.com", password=None, **request.param)
+
+
+@pytest.fixture
+def ownership_media_root(settings, tmp_path):
+    """Observe actual storage in a directory isolated from deployment media."""
+    settings.MEDIA_ROOT = tmp_path
+    return tmp_path
+
+
+def _ownership_pdf():
+    """Build a valid upload so omitting the owner guard reaches real storage."""
+    return SimpleUploadedFile("ownership.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n", content_type="application/pdf")
+
+
+def _stored_ownership_files(media_root):
+    """Capture file contents, including unexpected new uploads."""
+    return {str(path.relative_to(media_root)): path.read_bytes() for path in media_root.rglob("*") if path.is_file()}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("upload_key", ["file", "files"])
+def test_non_owner_cannot_upload_initial_request_file(api_client, foreign_request_actor, legal_request, ownership_media_root, upload_key):
+    """Fails if any non-owner attaches a file or changes real storage through the initial upload endpoint."""
+    original = LegalRequestFiles.objects.create(file=SimpleUploadedFile("existing.pdf", b"existing evidence"))
+    legal_request.files.add(original)
+    before = _stored_ownership_files(ownership_media_root)
+    original_state = (legal_request.user_id, legal_request.status)
+    api_client.force_authenticate(user=foreign_request_actor)
+    payload = {"legalRequestId": legal_request.pk, upload_key: _ownership_pdf()}
+    response = api_client.post(reverse("upload-legal-request-file"), payload, format="multipart")
+    legal_request.refresh_from_db()
+    assert response.status_code == 403
+    assert response.data["detail"] == "No tienes permiso para adjuntar archivos a esta solicitud."
+    assert list(legal_request.files.values_list("pk", flat=True)) == [original.pk]
+    assert LegalRequestFiles.objects.count() == 1
+    assert (legal_request.user_id, legal_request.status) == original_state
+    assert _stored_ownership_files(ownership_media_root) == before
+
+
+@pytest.mark.django_db
+def test_non_owner_upload_authorization_precedes_file_validation(api_client, foreign_request_actor, legal_request):
+    """Fails if an empty foreign upload reaches payload validation instead of ownership denial."""
+    api_client.force_authenticate(user=foreign_request_actor)
+    response = api_client.post(reverse("upload-legal-request-file"), {"legalRequestId": legal_request.pk}, format="multipart")
+    assert response.status_code == 403
+    assert legal_request.files.count() == 0
+
+
+@pytest.mark.django_db
+def test_non_owner_cannot_send_initial_confirmation(api_client, foreign_request_actor, legal_request):
+    """Fails if any non-owner triggers the owner's confirmation email."""
+    original_state = (legal_request.user_id, legal_request.status)
+    api_client.force_authenticate(user=foreign_request_actor)
+    with patch("gym_app.views.legal_request.send_template_email", return_value=True) as send_email:
+        response = api_client.post(reverse("send-confirmation-email"), {"legal_request_id": legal_request.pk}, format="json")
+    legal_request.refresh_from_db()
+    assert response.status_code == 403
+    assert response.data["detail"] == "No tienes permiso para enviar la confirmación de esta solicitud."
+    assert send_email.call_count == 0
+    assert (legal_request.user_id, legal_request.status) == original_state
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("owner_role", ["basic", "corporate_client", "lawyer"])
+def test_non_client_owner_can_upload_initial_request_file(api_client, user, legal_request, ownership_media_root, owner_role):
+    """Fails if ownership is incorrectly restricted to the client role."""
+    user.role = owner_role
+    user.save(update_fields=["role"])
+    api_client.force_authenticate(user=user)
+    incoming = _ownership_pdf()
+    expected_bytes = incoming.read()
+    incoming.seek(0)
+    response = api_client.post(reverse("upload-legal-request-file"), {"legalRequestId": legal_request.pk, "file": incoming}, format="multipart")
+    record = legal_request.files.get()
+    assert response.status_code == 201
+    assert response.data["successful_uploads"] == 1
+    assert record.file.read() == expected_bytes
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("owner_role", ["basic", "corporate_client", "lawyer"])
+def test_non_client_owner_can_send_initial_confirmation(api_client, user, legal_request, owner_role):
+    """Fails if a basic, corporate or lawyer owner cannot receive their confirmation."""
+    user.role = owner_role
+    user.save(update_fields=["role"])
+    api_client.force_authenticate(user=user)
+    with patch("gym_app.views.legal_request.send_template_email", return_value=True) as send_email:
+        response = api_client.post(reverse("send-confirmation-email"), {"legal_request_id": legal_request.pk}, format="json")
+    assert response.status_code == 200
+    assert response.data == {"message": "Confirmation email sent successfully", "legal_request_id": legal_request.pk}
+    assert send_email.call_args.kwargs["to_emails"] == [user.email]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("route", "id_key"), [("upload-legal-request-file", "legalRequestId"), ("send-confirmation-email", "legal_request_id")])
+def test_initial_request_mutation_requires_authentication(api_client, legal_request, route, id_key):
+    """Fails if either initial request endpoint accepts an anonymous mutation."""
+    response = api_client.post(reverse(route), {id_key: legal_request.pk}, format="json")
+    assert response.status_code == 401
+
 
 @pytest.fixture
 def user():
@@ -1634,7 +1748,7 @@ class TestCorporateRequestRoles:
 # ======================================================================
 
 """Tests for uncovered branches in legal_request.py (93%→100%)."""
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 from django.core.exceptions import ValidationError

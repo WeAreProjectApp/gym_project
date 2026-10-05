@@ -22,6 +22,7 @@ from gym_app.models import (
     StageAlert,
     User,
 )
+from gym_app.models.notification import Notification
 
 MAX_RECENT_PROCESS_LIST_QUERIES = 6
 MAX_PROCESS_LIST_QUERIES = 6
@@ -403,7 +404,6 @@ class TestProcessViews:
         
         # Verify no process was created
         assert Process.objects.count() == 0
-    
     def test_update_process_db_state(self, api_client, admin_user, process, case_type):
         """Test updating a process updates database correctly."""
         api_client.force_authenticate(user=admin_user)
@@ -944,6 +944,88 @@ def test_recent_processes_filters_access_before_the_ten_item_limit(
 
 
 # ======================================================================
+@pytest.mark.django_db
+class TestCreateProcessInternalAuthorization:
+    """Access boundaries for the process creation endpoint."""
+
+    @pytest.mark.parametrize('role', ['client', 'basic', 'corporate_client'])
+    def test_create_process_rejects_external_role(
+        self, api_client, client_user, lawyer_user, case_type, role,
+    ):
+        """Fails if an external account can create a process or its alerts."""
+        external_user = User.objects.create_user(
+            email=f'{role}.process@example.com', password='testpassword', role=role,
+        )
+        preserved_process = Process.objects.create(
+            authority='Preserved Court', plaintiff='Preserved Plaintiff',
+            defendant='Preserved Defendant', ref=f'PRESERVED-{role}',
+            lawyer=lawyer_user, case=case_type, subcase='Preserved subcase',
+        )
+        before_counts = (
+            Process.objects.count(), Stage.objects.count(), StageAlert.objects.count(), Notification.objects.count(),
+        )
+        payload = _make_process_data(
+            [client_user.id], lawyer_user.id, case_type.id,
+            ref=f'FORBIDDEN-{role}', stages=[{'status': 'Future hearing', 'date': '2099-12-31'}],
+        )
+        api_client.force_authenticate(user=external_user)
+
+        response = api_client.post(
+            reverse('create-process'), {'mainData': json.dumps(payload)}, format='multipart',
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Process.objects.get(pk=preserved_process.pk).ref == f'PRESERVED-{role}'
+        assert (
+            Process.objects.count(), Stage.objects.count(), StageAlert.objects.count(), Notification.objects.count(),
+        ) == before_counts
+
+    def test_create_process_rejects_malformed_payload(self, api_client, client_user):
+        """Fails if an external request parses malformed process data before denial."""
+        api_client.force_authenticate(user=client_user)
+
+        response = api_client.post(
+            reverse('create-process'), {'mainData': '{malformed'}, format='multipart',
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Process.objects.count() == 0
+
+    @pytest.mark.parametrize(
+        ('role', 'flags'),
+        [
+            ('lawyer', {}),
+            ('admin', {}),
+            ('basic', {'is_staff': True}),
+            ('basic', {'is_superuser': True}),
+            ('basic', {'is_gym_lawyer': True}),
+        ],
+        ids=['lawyer', 'admin', 'staff', 'superuser', 'gym-lawyer'],
+    )
+    def test_create_process_accepts_internal_actor(
+        self, api_client, client_user, lawyer_user, case_type, role, flags,
+    ):
+        """Fails if an accepted internal actor cannot create a staged process."""
+        internal_user = User.objects.create_user(
+            email=f'{role}.{next(iter(flags), "role")}.process@example.com',
+            password='testpassword', role=role, **flags,
+        )
+        ref = f'INTERNAL-{role}-{next(iter(flags), "role")}'
+        payload = _make_process_data(
+            [client_user.id], lawyer_user.id, case_type.id,
+            ref=ref, stages=[{'status': 'Future hearing', 'date': '2099-12-31'}],
+        )
+        api_client.force_authenticate(user=internal_user)
+
+        response = api_client.post(
+            reverse('create-process'), {'mainData': json.dumps(payload)}, format='multipart',
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        created_process = Process.objects.get(ref=ref)
+        assert StageAlert.objects.filter(stage__in=created_process.stages.all()).count() == 1
+
+
 # Tests merged from test_process_views.py (coverage + edge cases)
 # ======================================================================
 

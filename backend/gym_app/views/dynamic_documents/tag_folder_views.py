@@ -1,3 +1,4 @@
+from django.db.models import Prefetch, prefetch_related_objects
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,6 +6,7 @@ from rest_framework import status
 
 from gym_app.models.dynamic_document import Tag, DocumentFolder, DynamicDocument
 from gym_app.serializers.dynamic_document import TagSerializer, DocumentFolderSerializer
+from .document_views import get_optimized_document_queryset
 from .permissions import require_lawyer_only
 
 # -----------------------------------------------------------------------------
@@ -19,6 +21,13 @@ def _is_lawyer(user):  # pragma: no cover – unused helper, kept for potential 
 def _is_folder_owner(user, folder: DocumentFolder):
     """Return True if the user owns the folder."""
     return folder.owner_id == user.id
+
+
+def _folder_queryset():
+    """Load nested documents with the existing complete serializer query plan."""
+    return DocumentFolder.objects.prefetch_related(
+        Prefetch('documents', queryset=get_optimized_document_queryset()),
+    )
 
 # -----------------------------------------------------------------------------
 # Tag endpoints (lawyers only for mutations)
@@ -83,7 +92,7 @@ def delete_tag(request, pk):
 @permission_classes([IsAuthenticated])
 def list_folders(request):
     """List folders belonging to the authenticated client."""
-    folders = DocumentFolder.objects.filter(owner=request.user).order_by('-created_at')
+    folders = _folder_queryset().filter(owner=request.user).order_by('-created_at')
     serializer = DocumentFolderSerializer(folders, many=True)
     return Response(serializer.data)
 
@@ -111,6 +120,10 @@ def get_folder(request, pk):
     if not _is_folder_owner(request.user, folder):
         return Response({'detail': 'No tiene permiso para acceder a esta carpeta.'}, status=status.HTTP_403_FORBIDDEN)
 
+    prefetch_related_objects(
+        [folder],
+        Prefetch('documents', queryset=get_optimized_document_queryset()),
+    )
     serializer = DocumentFolderSerializer(folder)
     return Response(serializer.data)
 
@@ -147,4 +160,4 @@ def delete_folder(request, pk):
         return Response({'detail': 'No tiene permiso para eliminar esta carpeta.'}, status=status.HTTP_403_FORBIDDEN)
 
     folder.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT) 
+    return Response(status=status.HTTP_204_NO_CONTENT)

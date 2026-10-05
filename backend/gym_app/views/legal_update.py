@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from gym_app.models import LegalUpdate
 from gym_app.serializers import LegalUpdateSerializer
+from gym_app.utils.auth_utils import is_gym_staff
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -17,6 +18,11 @@ def legal_update_list(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
+        if not is_gym_staff(request.user):
+            return Response(
+                {'detail': 'No tienes permiso para modificar novedades jurídicas.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = LegalUpdateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
@@ -29,6 +35,11 @@ def legal_update_detail(request, pk):
     """
     Retrieve, update or delete a legal update.
     """
+    if request.method in ('PUT', 'DELETE') and not is_gym_staff(request.user):
+        return Response(
+            {'detail': 'No tienes permiso para modificar novedades jurídicas.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     try:
         update = LegalUpdate.objects.get(pk=pk, is_active=True)
     except LegalUpdate.DoesNotExist:
@@ -58,4 +69,4 @@ def active_legal_updates(request):
     """
     updates = LegalUpdate.objects.filter(is_active=True).order_by('-created_at')
     serializer = LegalUpdateSerializer(updates, many=True, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK) 
+    return Response(serializer.data, status=status.HTTP_200_OK)
