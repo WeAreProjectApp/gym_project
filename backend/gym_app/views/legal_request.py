@@ -268,6 +268,12 @@ def upload_legal_request_file(request):
             logger.error(f"Legal request {legal_request_id} not found for user {request.user.id}")
             return Response({'detail': 'Legal request not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+        if legal_request.user_id != request.user.id:
+            return Response(
+                {'detail': 'No tienes permiso para adjuntar archivos a esta solicitud.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Handle multiple files or single file
         files = request.FILES.getlist('files') if 'files' in request.FILES else [request.FILES.get('file')]
         files = [f for f in files if f]  # Filter out None values
@@ -353,6 +359,12 @@ def send_confirmation_email(request):
             legal_request = LegalRequest.objects.get(pk=legal_request_id)
         except LegalRequest.DoesNotExist:
             return Response({'detail': 'Legal request not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if legal_request.user_id != request.user.id:
+            return Response(
+                {'detail': 'No tienes permiso para enviar la confirmación de esta solicitud.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # Send confirmation email
         try:

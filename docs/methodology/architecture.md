@@ -2,6 +2,15 @@
 
 ## 1. System Overview
 
+### Mejora de autorización y relaciones — 2026-10-02
+
+Las mutaciones de novedades verifican la política interna antes de entrada o
+lookup. La finalización inicial de solicitudes verifica al propietario antes
+de archivos o correo. El selector de relaciones conserva su contrato completo
+con consultas correlacionadas de visibilidad y relación, conteos independientes
+y cuatro precargas específicas; su presupuesto se verifica mediante requests
+reales, sin cambiar la política de visibilidad de documentos.
+
 ```mermaid
 flowchart TB
     subgraph Client["Frontend (Vue 3 SPA + PWA)"]
