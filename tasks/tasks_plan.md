@@ -1,6 +1,24 @@
 # Tasks Plan — G&M Internal Management Tool
 
+**2026-10-02 — Ronda de permisos y relaciones:** candidatos
+`I-S-8cf319c5e61d`, `I-S-cb0850be9bc8` e `I-P-0eadd4c7c87b`.
+Denegar mutaciones externas de novedades y finalización de solicitudes ajenas;
+conservar operaciones legítimas y el payload del selector con un presupuesto
+de consultas constante. La entrega requiere QA del SHA final y PR abierto
+con CI verde hacia `master`. Ronda `i3-legal-relationships-20261002`.
+
 ## 1. Feature Status
+
+**2026-10-03 — Precargas localizadas:** pagos cargan sus autores; carpetas
+reutilizan el plan completo de documentos después de comprobar el propietario;
+detalle de servicios y último borrador comparten las precargas de respuestas,
+campos, archivos y abogados. Se conserva el payload, incluidos los permisos de
+carpetas sin contexto de request. Los tests protegen crecimiento de consultas,
+serialización sin SQL, datos anidados y regresiones de acceso y selección.
+Los presupuestos absolutos de carpetas y borradores siguen abiertos; no se
+declara verificación integral de `i5-query-preloads-20261003`. Evidencia en
+`2026-10-03-gym_project-improvement-pass-query-preloads-i5.md` del toolkit.
+Sin migraciones, dependencias nuevas ni despliegue.
 
 **2026-10-02 — Acceso interno y aviso de instalación:** se restringen la consulta
 de intranet, el envío de cuentas de cobro y la creación de procesos mediante la

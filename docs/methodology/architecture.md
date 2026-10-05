@@ -2,6 +2,15 @@
 
 ## 1. System Overview
 
+### Mejora de autorización y relaciones — 2026-10-02
+
+Las mutaciones de novedades verifican la política interna antes de entrada o
+lookup. La finalización inicial de solicitudes verifica al propietario antes
+de archivos o correo. El selector de relaciones conserva su contrato completo
+con consultas correlacionadas de visibilidad y relación, conteos independientes
+y cuatro precargas específicas; su presupuesto se verifica mediante requests
+reales, sin cambiar la política de visibilidad de documentos.
+
 ```mermaid
 flowchart TB
     subgraph Client["Frontend (Vue 3 SPA + PWA)"]
@@ -168,6 +177,17 @@ archivos y respuestas con autores/adjuntos. El prefetch normal de respuestas,
 sin `to_attr`, permite que `responses.count()` reutilice la caché de la relación.
 Estos contratos sin paginación de procesos/respuestas mantienen su payload;
 la constancia de consultas no impone un límite de memoria o tamaño de respuesta.
+
+Las lecturas de cuentas de cobro unen el autor dentro de la precarga de registros.
+Las carpetas precargan sus documentos con el plan documental compartido; el
+detalle verifica primero al propietario y conserva la serialización sin contexto
+de request. Las búsquedas de borradores de servicios reutilizan el queryset de
+detalle: archivos con su campo y respuestas de abogados con su autor se unen
+dentro de las precargas; los adjuntos de esas respuestas permanecen precargados.
+Estos cambios eliminan consultas por elemento sin reducir el payload. El número
+constante de consultas no acredita por sí solo los presupuestos absolutos:
+carpetas y borradores mantienen esa obligación abierta en la ronda
+`i5-query-preloads-20261003` del toolkit.
 
 Las organizaciones para crear solicitudes unen su corporativo desde la membresía.
 El listado de membresías usa Prefetch de organizaciones anotadas, sin un

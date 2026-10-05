@@ -95,6 +95,7 @@ Any new feature that gates by lawyer privileges **must consume `userStore.isLawy
 ### 4.6 Legal Requests
 - Clients submit requests categorized by type and discipline
 - File attachments per request
+- La carga inicial de adjuntos y el envío de confirmación corresponden únicamente al propietario de la solicitud; los privilegios internos no sustituyen esa propiedad.
 - Lawyer responses with conversation thread
 - Status tracking (PENDING, IN_REVIEW, RESPONDED, CLOSED)
 - Email notifications on status changes and new responses
@@ -126,6 +127,7 @@ Any new feature that gates by lawyer privileges **must consume `userStore.isLawy
 
 ### 4.11 Legal Updates
 - Lawyers publish legal updates visible to clients
+- Crear, editar y desactivar novedades requiere la política interna compartida; la lectura permanece disponible para usuarios autenticados.
 - Active updates listing
 
 ### 4.12 PWA Support
