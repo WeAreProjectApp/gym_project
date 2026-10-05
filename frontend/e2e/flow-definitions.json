@@ -1,6 +1,6 @@
 {
   "version": "1.13.6",
-  "lastUpdated": "2026-10-01",
+  "lastUpdated": "2026-10-02",
   "flows": {
     "user-guide-explorer-navigation": {
       "name": "Explorar el ecosistema desde el manual",
@@ -316,10 +316,11 @@
         "shared"
       ],
       "priority": "P2",
-      "description": "Menú lateral filtrado por rol con navegación",
+      "description": "Menú lateral filtrado por rol. En primera visita web sin aplicación instalada, a 412×915, 835×1194, 1195×835, 1440×900 y 2560×1440 se navega a Procesos con clics reales mientras el aviso PWA está invisible o visible, sin esperar que desaparezca.",
       "expectedSpecs": 1,
       "outcomes": [
-        "display"
+        "display",
+        "success"
       ]
     },
     "dashboard-legal-updates": {
@@ -1628,10 +1629,11 @@
         "shared"
       ],
       "priority": "P4",
-      "description": "Botón de instalación PWA y service worker",
+      "description": "Instalación desde el botón del aviso PWA en primera visita a 412×915, 835×1194, 1195×835, 1440×900 y 2560×1440. Conserva instrucciones manuales y prompt nativo; usuarios con la aplicación instalada no reciben el aviso.",
       "expectedSpecs": 1,
       "outcomes": [
-        "success"
+        "success",
+        "display"
       ]
     },
     "misc-error-handling": {

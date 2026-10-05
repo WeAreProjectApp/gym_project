@@ -20,6 +20,19 @@ declara verificación integral de `i5-query-preloads-20261003`. Evidencia en
 `2026-10-03-gym_project-improvement-pass-query-preloads-i5.md` del toolkit.
 Sin migraciones, dependencias nuevas ni despliegue.
 
+**2026-10-02 — Acceso interno y aviso de instalación:** se restringen la consulta
+de intranet, el envío de cuentas de cobro y la creación de procesos mediante la
+política compartida de personal interno. La negativa precede el parseo, las
+escrituras y los envíos; los roles internos y sus indicadores mantienen acceso.
+El contenedor del aviso PWA permite usar la navegación durante la primera visita,
+conserva el botón de instalación y oculta controles transparentes. Las pruebas
+cubren roles externos, personal interno, conservación de archivos y datos, y
+navegación real en ambas fases de animación a cinco tamaños de pantalla.
+Los flows existentes conservan sus contratos y registran los estados de pantalla.
+La evidencia final de `i2-internal-pwa-20261002` pertenece al reporte del toolkit
+`2026-10-02-gym_project-improvement-pass-internal-pwa-i2.md`. Los otros candidatos
+siguen en el ledger; no se aplican migraciones ni despliegues en esta ronda.
+
 **2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
 registro/perfil asignen autoridad, leer datos largos completos en el directorio
 y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que
