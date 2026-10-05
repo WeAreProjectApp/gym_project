@@ -41,6 +41,21 @@ No hay migraciones ni despliegue. Adjuntos en solicitudes ajenas, publicación d
 novedades, exposición de perfiles y las demás causas del ledger quedan pendientes
 por el cupo global de tres; los precios siguen requiriendo definición comercial.
 
+### Acceso privado — mejora transversal (2026-10-02)
+
+Ronda propia sobre `master`, independiente de los PR #135 y #136. Se restringe
+la consulta de firma personal a su propietario, se aplica autorización vigente
+al alta y lectura del historial de procesos antes de limitarlo a diez, y se
+elimina material criptográfico de los logs de firmas de pagos. Los contratos
+permitidos y la política interna de procesos se conservan.
+
+Candidatos: `I-S-4672dd4c7997`, `I-S-a4bdfa9b9ba3`, `I-S-b564669fa59a`.
+Validación backend aislada y cierre conjunto de QA en esta misma rama. Sin
+cambios de navegación, migraciones ni dependencias. El reporte de ronda vive
+en el toolkit: `2026-10-02-gym_project-improvement-pass-private-access-i4.md`.
+Los demás frentes y el contrato de activación/cobro de suscripciones siguen
+pendientes; esta ronda no certifica suficiencia del proyecto.
+
 ### Privilegios y directorio — mejora transversal (2026-10-01)
 
 Ronda `i1-auth-directory-20261001` en worktree propio, desde la base activa

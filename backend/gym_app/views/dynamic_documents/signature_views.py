@@ -1150,7 +1150,12 @@ def get_user_signature(request, user_id):
     """
     Obtener la firma del usuario especificado por su ID.
     """
-    
+    if request.user.id != user_id:
+        return Response(
+            {'error': 'No tienes permiso para consultar esta firma.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     try:
         user = User.objects.get(pk=user_id)
         
