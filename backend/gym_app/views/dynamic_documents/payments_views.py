@@ -16,6 +16,7 @@ import os
 from decimal import Decimal, InvalidOperation
 
 from django.db import IntegrityError
+from django.db.models import Prefetch
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -47,7 +48,13 @@ def _can_read(document, user):
 def _get_document(pk):
     return get_object_or_404(
         DynamicDocument.objects.select_related('created_by', 'assigned_to')
-        .prefetch_related('variables', 'payment_records'),
+        .prefetch_related(
+            'variables',
+            Prefetch(
+                'payment_records',
+                queryset=DocumentPaymentRecord.objects.select_related('uploaded_by'),
+            ),
+        ),
         pk=pk,
     )
 

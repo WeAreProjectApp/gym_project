@@ -9,6 +9,17 @@ con CI verde hacia `master`. Ronda `i3-legal-relationships-20261002`.
 
 ## 1. Feature Status
 
+**2026-10-03 — Precargas localizadas:** pagos cargan sus autores; carpetas
+reutilizan el plan completo de documentos después de comprobar el propietario;
+detalle de servicios y último borrador comparten las precargas de respuestas,
+campos, archivos y abogados. Se conserva el payload, incluidos los permisos de
+carpetas sin contexto de request. Los tests protegen crecimiento de consultas,
+serialización sin SQL, datos anidados y regresiones de acceso y selección.
+Los presupuestos absolutos de carpetas y borradores siguen abiertos; no se
+declara verificación integral de `i5-query-preloads-20261003`. Evidencia en
+`2026-10-03-gym_project-improvement-pass-query-preloads-i5.md` del toolkit.
+Sin migraciones, dependencias nuevas ni despliegue.
+
 **2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
 registro/perfil asignen autoridad, leer datos largos completos en el directorio
 y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que
