@@ -105,6 +105,13 @@ flowchart LR
 
 ## 3. Request Flow
 
+El historial de procesos aplica la misma política de objeto en escritura y
+lectura: internos autorizados, abogado asignado o cliente relacionado. La
+lectura reevalúa permisos mediante una subconsulta antes de ordenar y limitar
+a diez entradas, preservando precargas sin consultas por expediente. La firma
+personal exige propietario antes del lookup; la firma de integridad de pagos
+conserva su payload y sólo produce un evento de log sin material criptográfico.
+
 ```mermaid
 sequenceDiagram
     participant B as Browser (Vue SPA)

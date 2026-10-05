@@ -33,6 +33,13 @@ La evidencia final de `i2-internal-pwa-20261002` pertenece al reporte del toolki
 `2026-10-02-gym_project-improvement-pass-internal-pwa-i2.md`. Los otros candidatos
 siguen en el ledger; no se aplican migraciones ni despliegues en esta ronda.
 
+**2026-10-02 — Acceso privado:** ronda transversal de tres causas. El historial
+de procesos exige autorización de objeto al registrar vistas y filtra permisos
+actuales antes del límite de diez. La firma personal sólo se consulta por el
+propietario; un ID ajeno devuelve 403 antes del lookup. Las firmas de pagos
+mantienen su respuesta sin registrar clave, prefijo ni digest. Validación y
+entrega mediante QA conjunta y PR independiente hacia `master`.
+
 **2026-10-01 — Mejora transversal:** tres candidatos canónicos: impedir que
 registro/perfil asignen autoridad, leer datos largos completos en el directorio
 y mantener controles físicos de 44 px pese al zoom. Se ajusta también la fila que

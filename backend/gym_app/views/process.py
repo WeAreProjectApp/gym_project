@@ -3,7 +3,7 @@ import logging
 import traceback
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -607,8 +607,15 @@ def get_recent_processes(request):
     """
     Get the 10 most recently viewed processes by the authenticated user.
     """
+    recent_processes = RecentProcess.objects.filter(user=request.user)
+    if not is_gym_staff(request.user):
+        accessible_process_ids = Process.objects.filter(
+            Q(lawyer_id=request.user.id) | Q(clients__pk=request.user.id),
+        ).values('pk')
+        recent_processes = recent_processes.filter(process__in=accessible_process_ids)
+
     recent_processes = (
-        RecentProcess.objects.filter(user=request.user)
+        recent_processes
         .select_related('process__case', 'process__lawyer')
         .prefetch_related(
             'process__clients',
@@ -653,7 +660,13 @@ def update_recent_process(request, process_id):
         process = Process.objects.get(id=process_id)
     except Process.DoesNotExist:
         return Response({'error': 'Process not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    if not _user_can_access_process(request.user, process):
+        return Response(
+            {'detail': 'No tienes permiso para consultar este proceso.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     # Get or create the recent process entry
     recent_process, created = RecentProcess.objects.get_or_create(
         user=request.user,
