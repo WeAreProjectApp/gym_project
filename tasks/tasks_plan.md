@@ -1,5 +1,12 @@
 # Tasks Plan — G&M Internal Management Tool
 
+**2026-10-02 — Ronda de permisos y relaciones:** candidatos
+`I-S-8cf319c5e61d`, `I-S-cb0850be9bc8` e `I-P-0eadd4c7c87b`.
+Denegar mutaciones externas de novedades y finalización de solicitudes ajenas;
+conservar operaciones legítimas y el payload del selector con un presupuesto
+de consultas constante. La entrega requiere QA del SHA final y PR abierto
+con CI verde hacia `master`. Ronda `i3-legal-relationships-20261002`.
+
 ## 1. Feature Status
 
 **2026-10-03 — Precargas localizadas:** pagos cargan sus autores; carpetas
