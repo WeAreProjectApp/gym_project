@@ -25,6 +25,22 @@ commit final de la ronda en el registro de mejoras del toolkit. Se conserva el t
 Sin migraciones, dependencias nuevas ni despliegue. Las obligaciones fuera
 del cupo y las hipótesis responsive continúan pendientes.
 
+### Acceso interno y aviso de instalación — mejora transversal (2026-10-02)
+
+Ronda `i2-internal-pwa-20261002`, en worktree propio desde `master`. La consulta
+de documentos de intranet, el envío de cuentas de cobro y la creación de procesos
+reutilizan la política de personal interno antes de leer entrada o ejecutar
+efectos. Usuarios externos reciben 403; los indicadores y roles internos conservan
+su acceso. El aviso PWA no intercepta la navegación desde su contenedor, mantiene
+el botón de instalación y oculta su interacción durante fases transparentes.
+Las animaciones se cancelan al desmontar. La QA combinada cubre backend, componente
+y navegador sobre primera visita y la matriz responsive de cinco tamaños.
+El certificado de ejecución y la entrega se registran en el reporte del toolkit
+`2026-10-02-gym_project-improvement-pass-internal-pwa-i2.md`.
+No hay migraciones ni despliegue. Adjuntos en solicitudes ajenas, publicación de
+novedades, exposición de perfiles y las demás causas del ledger quedan pendientes
+por el cupo global de tres; los precios siguen requiriendo definición comercial.
+
 ### Privilegios y directorio — mejora transversal (2026-10-01)
 
 Ronda `i1-auth-directory-20261001` en worktree propio, desde la base activa

@@ -230,6 +230,12 @@ def create_process(request):
     - Check for unique 'ref' value.
     - Create the process and stages based on the provided data.
     """
+    if not is_gym_staff(request.user):
+        return Response(
+            {'detail': 'No tienes permisos para crear procesos.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     try:
         # Parse the main data from the request
         main_data = json.loads(request.data.get('mainData', '{}'))
