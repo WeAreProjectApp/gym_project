@@ -57,7 +57,8 @@ describe("QuickActionButtons.vue", () => {
     const wrapper = mountView({ role: "client" });
 
     expect(wrapper.text()).toContain("Mis Procesos");
-    expect(wrapper.text()).toContain("Agendar Cita");
+    // Calendly scheduling was removed (hotfix 2026-10-07): the card must not come back.
+    expect(wrapper.text()).not.toContain("Agendar Cita");
     expect(wrapper.text()).toContain("Radicar Solicitud");
     expect(wrapper.text()).not.toContain("Radicar Informe");
   });

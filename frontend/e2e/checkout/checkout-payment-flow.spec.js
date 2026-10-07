@@ -4,6 +4,10 @@ import { mockApi } from "../helpers/api.js";
 
 /**
  * E2E tests for Checkout subscription flows with behavior-first assertions.
+ *
+ * Hotfix 2026-10-07: online payment is not available. The paid checkout no longer renders the Wompi
+ * card form nor loads any third-party script; it shows a «Próximamente» notice and a disabled button.
+ * docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md explains why and how to reactivate it.
  */
 
 function buildMockUser({ id, role }) {
@@ -39,38 +43,6 @@ function buildAuthPayload(user) {
   };
 }
 
-async function installWompiExternalMocks(
-  page,
-  { cardToken = "tok_card_checkout_e2e", sessionId = "sess_checkout_e2e" } = {}
-) {
-  await page.route("https://checkout.wompi.co/widget.js*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/javascript",
-      body: "window.WidgetCheckout = function WidgetCheckout(){ this.open = function(){}; };",
-    });
-  });
-
-  await page.route("https://wompijs.wompi.com/libs/js/v1.js*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/javascript",
-      body: `window.$wompi = { initialize: function(callback){ callback({ sessionId: \"${sessionId}\" }, null); } };`,
-    });
-  });
-
-  await page.route("https://sandbox.wompi.co/v1/tokens/cards", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        status: "CREATED",
-        data: { id: cardToken },
-      }),
-    });
-  });
-}
-
 async function installCheckoutMocks(
   page,
   {
@@ -78,11 +50,13 @@ async function installCheckoutMocks(
     currentSubscription = null,
     createSubscriptionStatus = 201,
     subscriptionRequests = [],
+    apiCalls = [],
   }
 ) {
   const nowIso = new Date().toISOString();
 
   await mockApi(page, async ({ route, apiPath }) => {
+    apiCalls.push(apiPath);
     if (apiPath === "validate_token/") return { status: 200, contentType: "application/json", body: "{}" };
     if (apiPath === "users/") return { status: 200, contentType: "application/json", body: JSON.stringify([user]) };
     if (apiPath === `users/${user.id}/`) return { status: 200, contentType: "application/json", body: JSON.stringify(user) };
@@ -99,14 +73,6 @@ async function installCheckoutMocks(
         return { status: 200, contentType: "application/json", body: JSON.stringify(currentSubscription) };
       }
       return { status: 404, contentType: "application/json", body: JSON.stringify({ detail: "not_found" }) };
-    }
-
-    if (apiPath === "subscriptions/wompi-config/") {
-      return { status: 200, contentType: "application/json", body: JSON.stringify({ public_key: "pub_test_key_e2e" }) };
-    }
-
-    if (apiPath === "subscriptions/generate-signature/" && route.request().method() === "POST") {
-      return { status: 200, contentType: "application/json", body: JSON.stringify({ signature: "test_integrity_signature" }) };
     }
 
     if (apiPath === "subscriptions/create/" && route.request().method() === "POST") {
@@ -149,143 +115,37 @@ async function installCheckoutMocks(
 
 test.describe.configure({ timeout: 90_000 });
 
-test("paid checkout keeps subscribe disabled until the card is tokenized", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared'] }, async ({ page }) => {
+test("paid checkout from an old link shows the unavailable notice and never charges", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared', '@outcome:display'] }, async ({ page }) => {
+  // quality: allow-deep-link (since the 2026-10-07 hotfix the paid plan buttons are disabled, so an old link or bookmark is the only way into a paid checkout)
   const user = buildMockUser({ id: 5400, role: "client" });
+  const subscriptionRequests = [];
+  const apiCalls = [];
+  const paymentScripts = [];
+  page.on("request", (request) => {
+    if (/wompi|calendly/i.test(new URL(request.url()).hostname)) paymentScripts.push(request.url());
+  });
 
-  await installWompiExternalMocks(page);
-  await installCheckoutMocks(page, { user });
+  await installCheckoutMocks(page, { user, subscriptionRequests, apiCalls });
   await setAuthLocalStorage(page, buildAuthPayload(user));
 
   await page.goto("/checkout/cliente");
 
   await expect(page.getByRole("heading", { name: "Finalizar Suscripción" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Plan Cliente").first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Método de pago", exact: true })).toBeVisible();
+  await expect(page.getByTestId("checkout-paid-unavailable")).toContainText("El pago en línea no está disponible por ahora");
+  await expect(page.getByPlaceholder("0000 0000 0000 0000")).toHaveCount(0);
 
-  // Filling the card is NOT enough: the gate is the tokenization round-trip,
-  // so the subscribe button must stay disabled with a fully typed card.
-  await page.getByPlaceholder("Como aparece en la tarjeta").fill("E2E Holder");
-  await page.getByPlaceholder("0000 0000 0000 0000").fill("4242 4242 4242 4242");
-  await page.getByPlaceholder("MM").fill("12");
-  await page.getByPlaceholder("AA").fill("30");
-  await page.getByPlaceholder("CVC").fill("123");
+  const soon = page.getByRole("button", { name: "Próximamente" });
+  await expect(soon).toBeDisabled();
+  await soon.click({ force: true });
 
-  await expect(page.getByText("Método de pago configurado")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Guardar método de pago" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Confirmar Suscripción" })).toBeDisabled();
+  await expect(page).toHaveURL(/\/checkout\/cliente/);
+  expect(subscriptionRequests).toHaveLength(0);
+  expect(apiCalls).not.toContain("subscriptions/wompi-config/");
+  expect(paymentScripts).toEqual([]);
 });
 
-test("paid checkout tokenizes card then posts subscription payload", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared'] }, async ({ page }) => {
-  const user = buildMockUser({ id: 5401, role: "client" });
-  const subscriptionRequests = [];
-
-  await installWompiExternalMocks(page, {
-    cardToken: "tok_card_checkout_e2e",
-    sessionId: "sess_checkout_e2e",
-  });
-  await installCheckoutMocks(page, { user, subscriptionRequests });
-  await setAuthLocalStorage(page, buildAuthPayload(user));
-
-  await page.goto("/checkout/cliente");
-
-  await page.getByPlaceholder("Como aparece en la tarjeta").fill("E2E Holder");
-  await page.getByPlaceholder("0000 0000 0000 0000").fill("4242 4242 4242 4242");
-  await page.getByPlaceholder("MM").fill("12");
-  await page.getByPlaceholder("AA").fill("30");
-  await page.getByPlaceholder("CVC").fill("123");
-
-  await page.getByRole("button", { name: "Guardar método de pago" }).click();
-
-  const tokenizationDialog = page.locator('[role="dialog"], [role="alertdialog"]');
-  await expect(tokenizationDialog).toBeVisible({ timeout: 15_000 });
-  await expect(tokenizationDialog).toContainText("Método de pago agregado");
-  await tokenizationDialog.getByRole("button", { name: /ok|aceptar/i }).click();
-
-  await expect(page.getByText("Método de pago configurado")).toBeVisible();
-
-  const subscribeButton = page.getByRole("button", { name: "Confirmar Suscripción" });
-  await expect(subscribeButton).toBeEnabled();
-  await subscribeButton.click();
-
-  const subscriptionDialog = page.locator('[role="dialog"], [role="alertdialog"]');
-  await expect(subscriptionDialog).toBeVisible({ timeout: 15_000 });
-  await expect(subscriptionDialog).toContainText("Suscripción Creada");
-  await subscriptionDialog.getByRole("button", { name: /ok|aceptar/i }).click();
-
-  await expect
-    .poll(() => page.evaluate(() => window.location.pathname), { timeout: 45_000 })
-    .toBe("/dashboard");
-
-  expect(subscriptionRequests).toHaveLength(1);
-  expect(subscriptionRequests[0]).toMatchObject({
-    plan_type: "cliente",
-    session_id: "sess_checkout_e2e",
-    token: "tok_card_checkout_e2e",
-  });
-});
-
-test("paid checkout shows an error and does not redirect when subscription creation fails", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared', '@outcome:failure'] }, async ({ page }) => {
-  const user = buildMockUser({ id: 5404, role: "client" });
-
-  await installWompiExternalMocks(page, {
-    cardToken: "tok_card_checkout_e2e",
-    sessionId: "sess_checkout_e2e",
-  });
-  await installCheckoutMocks(page, { user, createSubscriptionStatus: 500 });
-  await setAuthLocalStorage(page, buildAuthPayload(user));
-
-  await page.goto("/checkout/cliente");
-
-  await page.getByPlaceholder("Como aparece en la tarjeta").fill("E2E Holder");
-  await page.getByPlaceholder("0000 0000 0000 0000").fill("4242 4242 4242 4242");
-  await page.getByPlaceholder("MM").fill("12");
-  await page.getByPlaceholder("AA").fill("30");
-  await page.getByPlaceholder("CVC").fill("123");
-
-  await page.getByRole("button", { name: "Guardar método de pago" }).click();
-
-  const tokenizationDialog = page.locator('[role="dialog"], [role="alertdialog"]');
-  await expect(tokenizationDialog).toBeVisible({ timeout: 15_000 });
-  await expect(tokenizationDialog).toContainText("Método de pago agregado");
-  await tokenizationDialog.getByRole("button", { name: /ok|aceptar/i }).click();
-
-  await expect(page.getByText("Método de pago configurado")).toBeVisible();
-
-  const subscribeButton = page.getByRole("button", { name: "Confirmar Suscripción" });
-  await expect(subscribeButton).toBeEnabled();
-  await subscribeButton.click();
-
-  // The backend rejection surfaces the server's own error message, read
-  // directly from error.response.data.error — not a generic fallback.
-  const errorDialog = page.locator('[role="dialog"], [role="alertdialog"]');
-  await expect(errorDialog).toBeVisible({ timeout: 15_000 });
-  await expect(errorDialog).toContainText("subscription_create_failed");
-  await errorDialog.getByRole("button", { name: /ok|aceptar/i }).click();
-
-  // No redirect on failure — the buyer stays on the paid checkout to retry.
-  expect(page.url()).toContain("/checkout/cliente");
-});
-
-test("paid checkout shows incomplete-card warning on empty tokenize submit", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared'] }, async ({ page }) => {
-  const user = buildMockUser({ id: 5402, role: "client" });
-
-  await installWompiExternalMocks(page);
-  await installCheckoutMocks(page, { user });
-  await setAuthLocalStorage(page, buildAuthPayload(user));
-
-  await page.goto("/checkout/cliente");
-
-  await page.getByRole("button", { name: "Guardar método de pago" }).click();
-
-  const warningDialog = page.locator('[role="dialog"], [role="alertdialog"]');
-  await expect(warningDialog).toBeVisible({ timeout: 15_000 });
-  await expect(warningDialog).toContainText("Información incompleta");
-  await warningDialog.getByRole("button", { name: /ok|aceptar/i }).click();
-
-  await expect(page.getByRole("button", { name: "Confirmar Suscripción" })).toBeDisabled();
-});
-
-test("free checkout creates subscription without payment tokenization", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared'] }, async ({ page }) => {
+test("free checkout creates subscription without payment tokenization", { tag: ['@flow:subscriptions-checkout-paid','@module:subscriptions', '@priority:P1', '@role:shared'] }, async ({ page }) => {
   const user = buildMockUser({ id: 5403, role: "client" });
   const subscriptionRequests = [];
 

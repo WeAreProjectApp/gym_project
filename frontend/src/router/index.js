@@ -333,18 +333,6 @@ const router = createRouter({
       ],
     },
     {
-      path: "/schedule_appointment",
-      component: SlideBar,
-      children: [
-        {
-          path: "",
-          name: "schedule_appointment",
-          component: () => import(/* webpackChunkName: "appointment" */ "@/views/schedule_appointment/ScheduleAppointment.vue"),
-          meta: { requiresAuth: true, title: "Agendar Cita" },
-        },
-      ],
-    },
-    {
       path: "/organizations_dashboard",
       component: SlideBar,
       children: [

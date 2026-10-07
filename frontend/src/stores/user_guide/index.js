@@ -8,7 +8,6 @@ import { servicesTramitesContent } from './content/services_tramites.js';
 import { adminStaffContent } from './content/admin_staff.js';
 import {
   requestsContent,
-  appointmentsContent,
   organizationsContent,
   intranetContent,
   authenticationContent,
@@ -22,7 +21,7 @@ import {
  * - Dashboard & Directory
  * - Processes
  * - Documents (largest section)
- * - Services (requests, appointments, organizations, intranet, auth, subscriptions)
+ * - Services (requests, organizations, intranet, auth, subscriptions)
  */
 export const useUserGuideStore = defineStore('userGuide', {
   state: () => ({
@@ -49,7 +48,6 @@ export const useUserGuideStore = defineStore('userGuide', {
         secop: secopContent,
         services: servicesTramitesContent,
         requests: requestsContent,
-        appointments: appointmentsContent,
         organizations: organizationsContent,
         intranet: intranetContent,
         authentication: authenticationContent,

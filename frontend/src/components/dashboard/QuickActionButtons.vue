@@ -123,21 +123,7 @@
           <ChevronRightIcon class="w-5 h-5 text-gray-400 ml-auto" />
         </router-link>
         
-        <router-link 
-          :to="{ name: 'schedule_appointment' }" 
-          class="flex items-center bg-blue-50 rounded-xl px-6 py-4 hover:shadow-md transition border border-blue-200"
-        >
-          <div class="flex-shrink-0 rounded-full p-3 mr-4">
-            <CalendarDaysIcon class="size-8 text-blue-600" />
-          </div>
-          <div class="flex flex-col">
-            <span class="font-medium text-primary">Agendar Cita</span>
-            <span class="text-sm text-gray-500">Asesoría jurídica</span>
-          </div>
-          <ChevronRightIcon class="w-5 h-5 text-gray-400 ml-auto" />
-        </router-link>
-        
-        <router-link 
+        <router-link
           :to="{ name: 'legal_request' }" 
           class="flex items-center bg-blue-50 rounded-xl px-6 py-4 hover:shadow-md transition border border-blue-200"
         >
@@ -166,7 +152,7 @@
  * 
  * Displays different quick action buttons based on the user's role.
  * For lawyers: File Process, New Document, File Report
- * For clients: My Processes, Schedule Appointment, File Request
+ * For clients: My Processes, File Request
  */
 import { computed, ref } from 'vue';
 import {
@@ -174,7 +160,6 @@ import {
   DocumentArrowDownIcon,
   DocumentTextIcon,
   DocumentChartBarIcon,
-  CalendarDaysIcon,
   FolderIcon,
   PlusCircleIcon,
   ChevronRightIcon,

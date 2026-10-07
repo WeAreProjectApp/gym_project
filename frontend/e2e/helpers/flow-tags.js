@@ -136,8 +136,6 @@ export const ORG_REQUEST_DETAIL = ['@flow:org-request-detail', '@module:organiza
 // ── Directory ───────────────────────────────────────────────────────────────
 export const DIRECTORY_SEARCH = ['@flow:directory-search', '@module:directory', '@priority:P2'];
 
-// ── Schedule ────────────────────────────────────────────────────────────────
-export const SCHEDULE_APPOINTMENT = ['@flow:schedule-appointment', '@module:schedule', '@priority:P2'];
 
 // ── Intranet ────────────────────────────────────────────────────────────────
 export const INTRANET_MAIN = ['@flow:intranet-main', '@module:intranet', '@priority:P2'];

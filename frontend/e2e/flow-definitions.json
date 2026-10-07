@@ -1,6 +1,6 @@
 {
-  "version": "1.13.6",
-  "lastUpdated": "2026-10-02",
+  "version": "1.13.7",
+  "lastUpdated": "2026-10-07",
   "flows": {
     "user-guide-explorer-navigation": {
       "name": "Explorar el ecosistema desde el manual",
@@ -407,18 +407,16 @@
       ]
     },
     "subscriptions-checkout-paid": {
-      "name": "Checkout plan pago (Wompi)",
+      "name": "Checkout plan pago (no disponible)",
       "module": "subscriptions",
       "roles": [
         "shared"
       ],
       "priority": "P1",
-      "description": "Pagar suscripción con tarjeta vía Wompi",
+      "description": "Los planes pagos muestran «Próximamente»: el pago en línea no está disponible y el checkout pago no cobra ni carga scripts de terceros (hotfix 2026-10-07, docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md)",
       "expectedSpecs": 2,
       "outcomes": [
-        "success",
-        "error",
-        "failure"
+        "display"
       ]
     },
     "subscriptions-management": {
@@ -431,7 +429,7 @@
       "description": "Reactivar suscripción, ver historial de pagos",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Dead surface (Rule 7): the flow's own description (\"Reactivar suscripcion, ver historial de pagos\") names capabilities with zero UI wiring. `reactivateSubscription()` and `fetchPaymentHistory()` (frontend/src/stores/subscriptions/index.js:143,182) call real, registered backend endpoints (subscriptions/reactivate/ -- note: NOT registered in urls.py at all; subscriptions/payments/ -- registered, urls.py:288) but are never invoked from any .vue file in the entire git history: `git log --all --oneline -S\"reactivateSubscription\" -- 'frontend/src/**/*.vue'` and the same for `fetchPaymentHistory` both return zero commits (only fff9a48/4578e6d touch the store). Subscriptions.vue (the /subscriptions page) is a static marketing catalog -- it never calls fetchCurrentSubscription or renders a current-plan/management indicator at all (`grep -in subscription frontend/src/views/subscriptions/Subscriptions.vue` returns only 2 unrelated navigation lines). The 7 tests currently tagged @flow:subscriptions-management (subscription-management.spec.js x4, subscription-management-flows.spec.js x3) all exercise catalog-browsing/checkout-navigation (duplicating subscriptions-view-plans) or one genuine PAID checkout completion (subscription-management-flows.spec.js:94, duplicating subscriptions-checkout-paid) -- none test reactivation or payment history."
+        "Dead surface (Rule 7): the flow's own description (\"Reactivar suscripcion, ver historial de pagos\") names capabilities with zero UI wiring. `reactivateSubscription()` and `fetchPaymentHistory()` (frontend/src/stores/subscriptions/index.js:143,182) call real, registered backend endpoints (subscriptions/reactivate/ -- note: NOT registered in urls.py at all; subscriptions/payments/ -- registered, urls.py:288) but are never invoked from any .vue file in the entire git history: `git log --all --oneline -S\"reactivateSubscription\" -- 'frontend/src/**/*.vue'` and the same for `fetchPaymentHistory` both return zero commits (only fff9a48/4578e6d touch the store). Subscriptions.vue (the /subscriptions page) is a static marketing catalog -- it never calls fetchCurrentSubscription or renders a current-plan/management indicator at all (`grep -in subscription frontend/src/views/subscriptions/Subscriptions.vue` returns only 2 unrelated navigation lines). The 6 tests currently tagged @flow:subscriptions-management (subscription-management.spec.js x4, subscription-management-flows.spec.js x2) all exercise catalog-browsing/checkout-navigation (duplicating subscriptions-view-plans) -- none test reactivation or payment history. The paid checkout completion that subscription-management-flows.spec.js used to carry was removed with the Wompi card form by the 2026-10-07 hotfix."
       ]
     },
     "subscriptions-cancel": {
@@ -457,7 +455,7 @@
       "description": "Cambiar tarjeta de pago en suscripción activa vía tokenización Wompi",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Dead surface (Rule 7), explicitly self-documented: subscription-update-payment.spec.js:11-14 states verbatim \"there is currently NO standalone update-payment-method UI (no component calls subscriptions/update-payment-method/)\". Backend endpoint is registered (urls.py:287, view at subscription.py:364) and the store wires `updatePaymentMethod(paymentSourceId)` (frontend/src/stores/subscriptions/index.js:162-172) to it, but it is never called from any .vue file: `git log --all --oneline -S\"updatePaymentMethod\" -- 'frontend/src/**/*.vue'` returns zero commits. What the spec file's own header names as \"the real payment-method flow\" -- tokenizing/replacing a card via Checkout.vue's own 'Cambiar' button -- only exists as a step INSIDE the initial paid-checkout purchase (Checkout.vue:402-469), duplicating subscriptions-checkout-paid's territory; it is not a way to change the card on an already-active subscription, which is what this flow's description promises."
+        "Dead surface (Rule 7): there is NO standalone update-payment-method UI (no component calls subscriptions/update-payment-method/). Backend endpoint is registered (urls.py:287, view at subscription.py:364) and the store wires `updatePaymentMethod(paymentSourceId)` (frontend/src/stores/subscriptions/index.js:162-172) to it, but it is never called from any .vue file: `git log --all --oneline -S\"updatePaymentMethod\" -- 'frontend/src/**/*.vue'` returns zero commits. The card form inside Checkout.vue that subscription-update-payment.spec.js used to exercise was removed with the Wompi loaders by the 2026-10-07 hotfix (docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md), and that spec with it."
       ]
     },
     "process-list-view": {
@@ -1555,21 +1553,6 @@
       "outcomes": [
         "success",
         "display"
-      ]
-    },
-    "schedule-appointment": {
-      "name": "Agendar cita",
-      "module": "schedule",
-      "roles": [
-        "client",
-        "corporate",
-        "basic"
-      ],
-      "priority": "P2",
-      "description": "Calendly integrado para agendar cita",
-      "expectedSpecs": 1,
-      "outcomes": [
-        "success"
       ]
     },
     "intranet-main": {

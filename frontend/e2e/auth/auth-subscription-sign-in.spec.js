@@ -123,11 +123,11 @@ test("anonymous visitor picking a plan lands on the subscription sign-in form", 
   await page.goto("/subscriptions");
   await expect(page.getByRole("heading", { name: "Servicios Legales" })).toBeVisible({ timeout: 15_000 });
 
-  // quality: allow-fragile-selector (positional access: second plan card is Plan Cliente)
-  await page.getByRole("button", { name: "Elegir plan" }).nth(1).click();
+  // Only the free plan can be chosen since the 2026-10-07 hotfix (the paid plans show «Próximamente»).
+  await page.getByRole("button", { name: "Elegir plan" }).first().click();
 
   // Not authenticated: the plan is parked in the query and login is requested
-  await expect(page).toHaveURL(/\/subscription\/sign_in\?plan=cliente/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/subscription\/sign_in\?plan=basico/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Inicia sesión para continuar" })).toBeVisible();
   // quality: allow-fragile-selector (stable application ID)
   await expect(page.locator('[id="email"]')).toBeVisible();

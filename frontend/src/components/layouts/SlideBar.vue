@@ -510,7 +510,6 @@ import {
   TransitionRoot,
 } from "@headlessui/vue";
 import {
-  CalendarDaysIcon,
   ScaleIcon,
   HomeIcon,
   XMarkIcon,
@@ -621,7 +620,6 @@ onMounted(async () => {
   if (isAdmin) {
     navigation.value = navigation.value.filter(
       (navItem) =>
-        navItem.name !== "Agendar Cita" &&
         navItem.name !== "Organizaciones"
     );
   } else {
@@ -791,16 +789,6 @@ const navigation = ref([
     icon: EnvelopeIcon,
     current: false,
     routes: ['/legal_requests', '/legal_request']
-  },
-  {
-    name: "Agendar Cita",
-    action: (item) => {
-      setCurrent(item);
-      router.push({ name: "schedule_appointment" });
-    },
-    icon: CalendarDaysIcon,
-    current: false,
-    routes: ['/schedule_appointment']
   },
   {
     name: "Intranet G&M",
