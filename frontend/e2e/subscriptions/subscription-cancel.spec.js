@@ -4,7 +4,6 @@ import {
   installSubscriptionsApiMocks,
   buildMockSubscription,
 } from "../helpers/subscriptionsMocks.js";
-import { installWompiStubs } from "../helpers/wompiStubs.js";
 
 /**
  * E2E tests for the subscriptions-cancel flow surface.
@@ -19,7 +18,6 @@ test("active subscriber leaving checkout finds the cancel-anytime policy", { tag
   const userId = 9100;
   const sub = buildMockSubscription({ planType: "cliente", status: "active" });
 
-  await installWompiStubs(page);
   await installSubscriptionsApiMocks(page, {
     userId,
     role: "client",
@@ -46,7 +44,6 @@ test("active subscriber leaving checkout finds the cancel-anytime policy", { tag
 test("user navigates to checkout from subscriptions page for plan upgrade", { tag: ['@flow:subscriptions-cancel', '@module:subscriptions', '@priority:P2', '@role:shared'] }, async ({ page }) => {
   const userId = 9101;
 
-  await installWompiStubs(page);
   await installSubscriptionsApiMocks(page, {
     userId,
     role: "client",
@@ -61,9 +58,9 @@ test("user navigates to checkout from subscriptions page for plan upgrade", { ta
   await page.goto("/subscriptions");
   await expect(page.getByRole("heading", { name: "Servicios Legales" })).toBeVisible({ timeout: 15_000 });
 
-  // quality: allow-fragile-selector (positional access: second plan card is Plan Cliente)
-  await page.getByRole("button", { name: "Elegir plan" }).nth(1).click();
+  // Only the free plan can be chosen since the 2026-10-07 hotfix (the paid plans show «Próximamente»).
+  await page.getByRole("button", { name: "Elegir plan" }).first().click();
 
-  await expect(page).toHaveURL(/\/checkout\/cliente/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/checkout\/basico/, { timeout: 10_000 });
   await expect(page.getByRole("heading", { name: "Finalizar Suscripción" })).toBeVisible();
 });

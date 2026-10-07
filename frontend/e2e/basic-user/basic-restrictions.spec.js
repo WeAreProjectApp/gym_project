@@ -121,17 +121,6 @@ test.describe("Basic User Restrictions", () => {
     await expect(page).toHaveURL(/\/legal_request_create/, { timeout: 15_000 });
   });
 
-  test("basic user can access schedule appointment page", {
-    tag: ['@flow:basic-restrictions', '@module:auth', '@priority:P3', '@role:basic'],
-  }, async ({ page }) => {
-    const userId = 9604;
-    await installBasicUserMocks(page, { userId });
-    await setAuthLocalStorage(page, basicAuth(userId));
-
-    await page.goto("/schedule_appointment");
-    await expect(page).toHaveURL(/\/schedule_appointment/, { timeout: 15_000 });
-  });
-
   test("basic user has no signature available", {
     tag: ['@flow:basic-restrictions', '@module:auth', '@priority:P3', '@role:basic'],
   }, async ({ page }) => {

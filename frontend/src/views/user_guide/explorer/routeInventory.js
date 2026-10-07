@@ -32,7 +32,6 @@ export const routeInventory = {
   '/services_admin': 'administration-admin-services-catalog',
   '/data_reassignment': 'administration-admin-data-reassignment',
   '/intranet_g_y_m': 'intranet',
-  '/schedule_appointment': 'appointments',
   '/organizations_dashboard': 'organizations',
   '/dynamic_document_dashboard': 'documents',
   'signed-documents': 'documents-electronic-signature',

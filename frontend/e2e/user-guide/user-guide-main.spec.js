@@ -86,7 +86,7 @@ test.describe("user guide: main page", { tag: ['@flow:user-guide-navigation', '@
 
     // Selecting a module never reveals modules outside the role's catalogue
     await expect(sidebar.getByRole("button", { name: "Directorio", exact: true })).toHaveCount(0);
-    await expect(sidebar.getByRole("button", { name: "Agendar Cita", exact: true })).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Organizaciones", exact: true })).toBeVisible();
   });
 });
 

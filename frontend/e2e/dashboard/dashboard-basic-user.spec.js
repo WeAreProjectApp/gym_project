@@ -91,7 +91,7 @@ test("basic user can access dashboard and sees welcome content", { tag: ['@flow:
   // Dashboard welcome card and the non-lawyer quick actions render
   await expect(page.getByText("Procesos activos")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText("Radicar Solicitud")).toBeVisible();
-  await expect(page.getByText("Agendar Cita").first()).toBeVisible();
+  await expect(page.getByText("Mis Procesos").first()).toBeVisible();
 
   // Verify role is basic in session
   const userAuth = await page.evaluate(() => JSON.parse(localStorage.getItem("userAuth") || "{}"));

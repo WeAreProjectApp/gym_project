@@ -4,7 +4,6 @@ import {
   FolderIcon,
   DocumentTextIcon,
   InboxArrowDownIcon,
-  CalendarDaysIcon,
   BuildingOfficeIcon,
   ScaleIcon,
   UserCircleIcon,
@@ -63,13 +62,6 @@ export const allModules = [
     icon: InboxArrowDownIcon,
     roles: ['lawyer', 'client', 'corporate_client', 'basic'],
     description: 'Gestión de solicitudes y consultas legales'
-  },
-  {
-    id: 'appointments',
-    name: 'Agendar Cita',
-    icon: CalendarDaysIcon,
-    roles: ['client', 'corporate_client', 'basic'],
-    description: 'Sistema de agendamiento de citas con abogados'
   },
   {
     id: 'organizations',

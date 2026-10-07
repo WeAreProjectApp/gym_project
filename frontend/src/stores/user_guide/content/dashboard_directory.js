@@ -53,7 +53,7 @@ export const dashboardContent = {
       `,
       features: [
         'Para Abogados: Todos los Procesos, Radicar Proceso, Nueva Minuta, Radicar Informe',
-        'Para Clientes: Mis Procesos, Agendar Cita, Nueva Solicitud'
+        'Para Clientes: Mis Procesos, Nueva Solicitud'
       ],
       tips: [
         'Los botones cambian según tu rol para mostrarte solo las opciones relevantes',

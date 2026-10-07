@@ -39,7 +39,8 @@ test("lawyer quick action Todos los Procesos opens the general process list", { 
   await expect(page.getByRole("button", { name: "Todos los Procesos" })).toBeVisible();
 });
 
-test("client quick action Agendar Cita opens the appointment scheduler", { tag: ['@flow:dashboard-quick-actions', '@module:dashboard', '@priority:P3', '@role:shared'] }, async ({ page }) => {
+// The client «Agendar Cita» quick action (Calendly) was removed by the 2026-10-07 hotfix.
+test("client quick action Radicar Solicitud opens the legal request form", { tag: ['@flow:dashboard-quick-actions', '@module:dashboard', '@priority:P3', '@role:shared'] }, async ({ page }) => {
   const userId = 9832;
 
   await installDashboardNavApiMocks(page, { userId, role: "client", isGymLawyer: false });
@@ -55,10 +56,11 @@ test("client quick action Agendar Cita opens the appointment scheduler", { tag: 
 
   // Client quick actions — use first() since "Mis Procesos" may appear in sidebar too
   await expect(page.getByText("Mis Procesos").first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("link", { name: /Agendar Cita/ })).toHaveCount(0);
 
-  await page.getByRole("link", { name: /Agendar Cita/ }).first().click();
+  await page.getByRole("link", { name: /Radicar Solicitud/ }).first().click();
 
-  // Transition: the appointment scheduling view replaces the dashboard
-  await expect(page).toHaveURL(/\/schedule_appointment/, { timeout: 10_000 });
+  // Transition: the legal request form replaces the dashboard
+  await expect(page).toHaveURL(/\/legal_request/, { timeout: 10_000 });
   await expect(page.getByText("Procesos activos")).toHaveCount(0);
 });

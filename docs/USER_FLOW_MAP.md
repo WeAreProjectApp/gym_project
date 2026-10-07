@@ -6,6 +6,8 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 **Versión:** 1.13.4
 **Fuentes:** `src/router/index.js`, `src/views/`, `src/components/`, `e2e/flow-definitions.json`, `docs/FUNCTIONAL_GUIDE_BY_ROLE.md`
 
+> **Hotfix 2026-10-07 (flow-definitions v1.13.7):** se retiró «Agendar Cita» (Calendly) y su flujo `schedule-appointment`, y el pago en línea (Wompi) quedó «Próximamente»: `subscriptions-checkout-paid` pasa a un único outcome `display`. Motivo y cómo reactivarlos: `docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md`. Las tablas y notas fechadas más abajo conservan las cifras de su fecha.
+
 ---
 
 ## Tabla de Contenido
@@ -29,7 +31,7 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 | Rol | Descripción | Módulos exclusivos |
 |-----|-------------|-------------------|
 | **Lawyer** | Gestión completa de procesos, clientes y documentos | Directorio, Gestión de Solicitudes |
-| **Client** | Ver procesos propios, solicitar servicios, usar documentos | Solicitudes (crear), Agendar Cita, Organizaciones (lectura) |
+| **Client** | Ver procesos propios, solicitar servicios, usar documentos | Solicitudes (crear), Organizaciones (lectura) |
 | **Corporate Client** | Todo de Client + gestión completa de Organizaciones | Organizaciones (CRUD completo) |
 | **Basic** | Acceso limitado, sin firma electrónica ni membrete | — |
 | **Lawyer G&M** | Lawyer con `is_gym_lawyer=true`, acceso a Intranet | Intranet G&M |
@@ -242,27 +244,18 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 
 ---
 
-### subscriptions-checkout-paid: Checkout plan pago
+### subscriptions-checkout-paid: Checkout plan pago (no disponible)
 - **Módulo:** subscriptions | **Prioridad:** P1 | **Ruta:** `/checkout/<plan>` | **E2E:** ✅
-- **Descripción:** Pagar suscripción con tarjeta vía Wompi
+- **Descripción:** Los planes pagos muestran «Próximamente»: el pago en línea no está disponible (hotfix 2026-10-07, `docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md`)
 
 **Pasos:**
-1. Navega a `/checkout/cliente` o `/checkout/corporativo`
-2. Ve resumen del plan con precio
-3. **Se muestra formulario de tarjeta** (`planDetails.amountInCents > 0`):
-   - Nombre del titular
-   - Número de tarjeta
-   - Mes/Año de expiración
-   - CVC
-4. Click "Guardar método de pago" → tokenización Wompi
-5. Ve confirmación "Método de pago guardado"
-6. Click "Confirmar Suscripción"
-7. Plan activado
+1. En `/subscriptions`, los planes Cliente y Corporativo muestran el botón «Próximamente», deshabilitado
+2. Quien llega a `/checkout/cliente` o `/checkout/corporativo` por un enlace viejo ve el resumen del plan con precio
+3. En lugar del formulario de tarjeta ve «El pago en línea no está disponible por ahora» y el botón «Próximamente», deshabilitado
+4. No se crea ninguna suscripción y no se carga ningún script de terceros
 
 **Ramificaciones:**
-- ├── **Tokenización exitosa:** Muestra badge verde "Método de pago guardado" + botón "Cambiar"
-- ├── **Error de tokenización:** Mensaje de error, puede reintentar
-- └── **Cambiar tarjeta:** Click "Cambiar" → limpia datos y muestra formulario de nuevo
+- └── **Plan Básico:** sigue disponible y se activa sin pago (`subscriptions-checkout-free`)
 
 ---
 
@@ -289,14 +282,10 @@ Documento exhaustivo que mapea todos los flujos end-to-end que un usuario puede 
 ---
 
 ### subscriptions-update-payment: Actualizar método de pago
-- **Módulo:** subscriptions | **Prioridad:** P2 | **Ruta:** N/A | **E2E:** ✅
+- **Módulo:** subscriptions | **Prioridad:** P2 | **Ruta:** N/A | **E2E:** ❌ (sin UI)
 - **Descripción:** Cambiar tarjeta de pago en suscripción activa vía tokenización Wompi
 
-**Pasos:**
-1. En gestión de suscripción, click "Cambiar método de pago"
-2. Formulario de tarjeta (nombre, número, expiración, CVC)
-3. Tokenización vía Wompi
-4. Confirmación de actualización
+**Estado:** no hay UI para esta acción. El formulario de tarjeta de `Checkout.vue` se retiró con los cargadores de Wompi en el hotfix 2026-10-07 (`docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md`).
 
 ---
 
@@ -553,7 +542,7 @@ la fuente actualizada para el total es `flow-definitions.json`.
 **Ramificaciones por rol (sidebar):**
 - ├── **Lawyer:** Dashboard, Directorio, Procesos, Documentos, Gestión de Solicitudes, Manual de Usuario
 - ├── **Lawyer G&M:** Todo de Lawyer + Intranet G&M
-- ├── **Client:** Dashboard, Procesos, Documentos, Solicitudes, Agendar Cita, Organizaciones, Manual de Usuario
+- ├── **Client:** Dashboard, Procesos, Documentos, Solicitudes, Organizaciones, Manual de Usuario
 - ├── **Corporate Client:** Igual que Client
 - └── **Basic:** Igual que Client
 
@@ -1480,7 +1469,7 @@ Expired → PendingSignatures (abogado corrige y reenvía)
 - **Módulo:** dashboard | **Prioridad:** P2 | **Ruta:** `/dashboard` | **E2E:** ✅
 
 **Diferencias con Lawyer:**
-- Botones de acción rápida: Mis Procesos, Agendar Cita, Nueva Solicitud
+- Botones de acción rápida: Mis Procesos, Nueva Solicitud
 - Sin botón "Radicar Proceso" ni "Radicar Informe"
 
 ---
@@ -1620,18 +1609,6 @@ Expired → PendingSignatures (abogado corrige y reenvía)
 
 ---
 
-### schedule-appointment: Agendar cita
-- **Módulo:** schedule | **Prioridad:** P2 | **Ruta:** `/schedule_appointment` | **E2E:** ✅
-- **Descripción:** Agendar cita con abogado vía Calendly
-
-**Ramificaciones — Tipo de cita:**
-- ├── **Consulta inicial**
-- ├── **Asesoría**
-- ├── **Seguimiento**
-- └── **Revisión**
-
----
-
 ## Flujos — Corporate Client
 
 > Hereda **todos** los flujos de Client, más los siguientes exclusivos.
@@ -1755,7 +1732,6 @@ Expired → PendingSignatures (abogado corrige y reenvía)
 - ✅ **Membrete global:** Botón deshabilitado en `/dynamic_document_dashboard`
 - ✅ **Filtros SECOP:** Overlay de bloqueo sobre el panel de filtros en `/secop`
 - ✅ **Crear solicitudes:** Acceso a `/legal_request_create`
-- ✅ **Agendar cita:** Acceso a `/schedule_appointment`
 - ✅ **Usar documentos:** Puede completar formularios (sin firma electrónica)
 - ✅ **Organizaciones:** Vista lectura igual que Client
 

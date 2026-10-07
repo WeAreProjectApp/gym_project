@@ -33,7 +33,6 @@ jest.mock("@/views/legal_request/LegalRequest.vue", () => ({ __esModule: true, d
 jest.mock("@/views/legal_request/LegalRequestsList.vue", () => ({ __esModule: true, default: {} }));
 jest.mock("@/views/legal_request/LegalRequestDetail.vue", () => ({ __esModule: true, default: {} }));
 jest.mock("@/views/intranet_g_y_m/IntranetGyM.vue", () => ({ __esModule: true, default: {} }));
-jest.mock("@/views/schedule_appointment/ScheduleAppointment.vue", () => ({ __esModule: true, default: {} }));
 jest.mock("@/views/organizations/Dashboard.vue", () => ({ __esModule: true, default: {} }));
 jest.mock("@/views/dynamic_document/Dashboard.vue", () => ({ __esModule: true, default: {} }));
 jest.mock("@/components/dynamic_document/common/SignaturesList.vue", () => ({ __esModule: true, default: {} }));

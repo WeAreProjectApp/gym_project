@@ -253,7 +253,8 @@ describe("SlideBar.vue", () => {
       .filter(Boolean);
 
     expect(texts).not.toContain("Solicitudes");
-    expect(texts).toContain("Agendar Cita");
+    // Calendly scheduling was removed (hotfix 2026-10-07): the item must not come back.
+    expect(texts).not.toContain("Agendar Cita");
     expect(texts).not.toContain("Directorio");
     expect(texts).not.toContain("Intranet G&M");
     expect(texts).not.toContain("Gestión de Solicitudes");
@@ -283,7 +284,7 @@ describe("SlideBar.vue", () => {
     expect(texts).not.toContain("Organizaciones");
     expect(texts).not.toContain("Intranet G&M");
     expect(texts).not.toContain("Solicitudes");
-    expect(texts).toContain("Agendar Cita");
+    expect(texts).not.toContain("Agendar Cita");
   });
 
   test("Manual de Usuario pushes refresh param when already on /user_guide", async () => {
@@ -554,7 +555,7 @@ describe("SlideBar.vue", () => {
     };
 
     expect(await clickNav("Servicios y Solicitudes")).toEqual({ name: "services_hub" });
-    expect(await clickNav("Agendar Cita")).toEqual({ name: "schedule_appointment" });
+    expect(await clickNav("Organizaciones")).toEqual({ name: "organizations_dashboard" });
   });
 
   test("admin navigation shows Reasignación de Datos and hides client-only items", async () => {

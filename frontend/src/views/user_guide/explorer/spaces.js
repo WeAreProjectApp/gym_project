@@ -81,10 +81,6 @@ export const attentionSpace = space('attention', 'Atención y organizaciones',
         ['request-thread', 'Conversación y seguimiento', 'Selecciona una solicitud para consultar respuestas y continuar la conversación.'],
         ['manage-requests', 'Gestión jurídica', 'Revisa consultas recibidas, responde y actualiza sus estados.', { access: 'lawyer' }],
       ]),
-    moduleNode('appointments', 'Agendar Cita', 'Agenda una cita mediante el calendario integrado.',
-      'Encuentra una disponibilidad y coordina la atención.', 'appointments', 'schedule_appointment', ['appointments'], [
-        ['schedule', 'Calendario de citas', 'Selecciona disponibilidad y completa los pasos de Calendly.'],
-      ], { access: 'appointment' }),
     moduleNode('organizations', 'Organizaciones', 'Miembros, publicaciones y solicitudes de organizaciones.',
       'Reúne la comunicación entre clientes y su organización.', 'organizations', 'organizations_dashboard', ['organizations'], [
         ['corporate-dashboard', 'Administrar organizaciones', 'Crea organizaciones, edita su perfil y consulta estadísticas.', { access: 'corporate' }],

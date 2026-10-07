@@ -1,6 +1,5 @@
 import {
   InboxArrowDownIcon,
-  CalendarDaysIcon,
   BuildingOfficeIcon,
   ScaleIcon,
   UserCircleIcon,
@@ -137,60 +136,6 @@ export const requestsContent = {
         'Fecha y hora de cada mensaje',
         'Agregar archivos adicionales',
         'Historial completo de la conversación'
-      ]
-    }
-  ]
-};
-
-export const appointmentsContent = {
-  name: 'Agendar Cita',
-  icon: CalendarDaysIcon,
-  description: 'Sistema de agendamiento de citas con abogados',
-  overview: `
-    <p>Integración con Calendly para agendar citas de asesoría legal de manera fácil y rápida.</p>
-  `,
-  sections: [
-    {
-      id: 'schedule',
-      name: 'Agendar Cita',
-      description: 'Proceso de agendamiento',
-      roles: ['client', 'corporate_client', 'basic'],
-      content: `
-        <p>Los clientes pueden agendar citas con abogados usando el sistema Calendly integrado.</p>
-      `,
-      features: [
-        'Widget de Calendly embebido en la plataforma',
-        'Calendario con disponibilidad en tiempo real gestionada por G&M',
-        'Selección de fecha y hora disponibles',
-        'Formulario con datos de contacto',
-        'Confirmación automática por email (enviada por Calendly)'
-      ],
-      steps: [
-        {
-          title: 'Accede a Agendar Cita',
-          description: 'Click en "Agendar Cita" en el menú lateral'
-        },
-        {
-          title: 'Elige fecha y hora',
-          description: 'Selecciona un horario disponible dentro del widget de Calendly'
-        },
-        {
-          title: 'Completa tus datos',
-          description: 'Ingresa nombre, email y motivo breve de la consulta'
-        },
-        {
-          title: 'Confirma la cita',
-          description: 'Revisa la información y confirma desde el widget'
-        },
-        {
-          title: 'Recibe confirmación',
-          description: 'Calendly te envía un email con los detalles y un enlace para reprogramar o cancelar'
-        }
-      ],
-      tips: [
-        'Agenda con anticipación para mejor disponibilidad',
-        'Prepara tus documentos antes de la cita',
-        'Usa el enlace de Calendly en el email si necesitas reprogramar'
       ]
     }
   ]

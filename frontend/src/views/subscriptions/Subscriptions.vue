@@ -140,8 +140,9 @@
                 <span class="text-sm text-gray-500">/mes</span>
               </div>
             </div>
-            <button @click="selectPlan('cliente')" class="w-full px-6 py-3 bg-secondary rounded-lg text-base font-semibold text-white hover:bg-blue-700 transition-all duration-200 mb-6">
-              Elegir plan
+            <!-- Paid plan: online payment is not available yet (hotfix 2026-10-07). -->
+            <button type="button" disabled data-testid="plan-cliente-coming-soon" class="w-full px-6 py-3 bg-secondary rounded-lg text-base font-semibold text-white opacity-60 cursor-not-allowed mb-6">
+              Próximamente
             </button>
             <div class="space-y-3 text-sm">
               <div class="flex items-start gap-2 text-gray-700">
@@ -240,8 +241,9 @@
                 <span class="text-sm text-gray-500">/mes</span>
               </div>
             </div>
-            <button @click="selectPlan('corporativo')" class="w-full px-6 py-3 bg-primary rounded-lg text-base font-semibold text-white hover:bg-opacity-90 transition-all duration-200 mb-6">
-              Elegir plan
+            <!-- Paid plan: online payment is not available yet (hotfix 2026-10-07). -->
+            <button type="button" disabled data-testid="plan-corporativo-coming-soon" class="w-full px-6 py-3 bg-primary rounded-lg text-base font-semibold text-white opacity-60 cursor-not-allowed mb-6">
+              Próximamente
             </button>
             <div class="space-y-3 text-sm">
               <div class="flex items-start gap-2 text-gray-700">

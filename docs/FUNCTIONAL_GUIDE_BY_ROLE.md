@@ -290,18 +290,12 @@ This document consolidates all information about features, roles, and permission
 
 ---
 
-### 6. SCHEDULE APPOINTMENT
+### 6. SCHEDULE APPOINTMENT (removed 2026-10-07)
 
-**Available for**: Client, Corporate Client, Basic
-
-#### Features:
-- Calendly integration
-- Interactive calendar with real-time availability
-- Appointment types: Initial consultation, Advisory, Follow-up, Review
-- Contact details form
-- Automatic email confirmation
-- Add to personal calendar (Google, Outlook, iCal)
-- Automatic reminders
+The Calendly scheduler («Agendar Cita») was removed: it was not in use and its third-party script
+loader blocked the production deploy. The route `/schedule_appointment`, the sidebar item and the
+dashboard quick action no longer exist. See `docs/hotfixes/2026-10-07-remove-unused-third-party-loaders.md`
+for the reason and how to bring it back.
 
 ---
 
@@ -411,7 +405,6 @@ This document consolidates all information about features, roles, and permission
 /process_form - File Process (requiresLawyer)
 /dynamic_document_dashboard - Legal Files
 /legal_requests - Requests/Management
-/schedule_appointment - Schedule Appointment
 /organizations_dashboard - Organizations
 /intranet_g_y_m - Intranet (requiresLawyer + is_gym_lawyer)
 /user_guide - User Guide

@@ -1,7 +1,6 @@
 import { test, expect } from "../helpers/test.js";
 import { setAuthLocalStorage } from "../helpers/auth.js";
 import { mockApi } from "../helpers/api.js";
-import { installWompiStubs } from "../helpers/wompiStubs.js";
 
 const buildCheckoutEmail = (userId) => `checkout-user-${userId}@example.test`;
 
@@ -106,11 +105,12 @@ test("selecting the free plan opens its checkout with the buyer's own data", { t
   await expect(page.getByRole("button", { name: /Activar Plan Gratuito/i })).toBeVisible();
 });
 
-test("selecting the corporate plan opens a paid checkout with the card form", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared', '@outcome:display'] }, async ({ page }) => {
+// Hotfix 2026-10-07: online payment is not available. The paid plan cards read «Próximamente» and
+// no longer open a paid checkout.
+test("the corporate plan card shows Próximamente instead of opening a paid checkout", { tag: ['@flow:subscriptions-checkout-paid', '@module:subscriptions', '@priority:P1', '@role:shared', '@outcome:display'] }, async ({ page }) => {
   const userId = 9101;
   const userEmail = buildCheckoutEmail(userId);
 
-  await installWompiStubs(page);
   await installCheckoutMocks(page, { userId, planType: "corporativo" });
 
   await setAuthLocalStorage(page, {
@@ -120,17 +120,15 @@ test("selecting the corporate plan opens a paid checkout with the card form", { 
 
   await page.goto("/subscriptions");
   await expect(page.getByRole("heading", { name: "Servicios Legales" })).toBeVisible({ timeout: 15_000 });
-
-  // quality: allow-fragile-selector (positional access: third plan card is Plan Corporativo)
-  await page.getByRole("button", { name: "Elegir plan" }).nth(2).click();
-
-  await expect(page).toHaveURL(/\/checkout\/corporativo/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Plan Corporativo" })).toBeVisible();
 
-  // A paid plan swaps the free-activation button for the payment section
-  await expect(page.getByText("Configura tu método de pago")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Confirmar Suscripción" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Activar Plan Gratuito/i })).toHaveCount(0);
+  const corporate = page.getByTestId("plan-corporativo-coming-soon");
+  await expect(corporate).toHaveText("Próximamente");
+  await expect(corporate).toBeDisabled();
+  await corporate.click({ force: true });
+
+  await expect(page).toHaveURL(/\/subscriptions$/);
+  await expect(page.getByRole("heading", { name: "Finalizar Suscripción" })).toHaveCount(0);
 });
 
 test("free plan checkout activates subscription successfully", { tag: ['@flow:subscriptions-checkout-free', '@module:subscriptions', '@priority:P1', '@role:shared', '@outcome:success'] }, async ({ page }) => {

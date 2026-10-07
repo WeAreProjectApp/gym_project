@@ -4,7 +4,6 @@ import {
   installSubscriptionsApiMocks,
   buildMockSubscription,
 } from "../helpers/subscriptionsMocks.js";
-import { installWompiStubs } from "../helpers/wompiStubs.js";
 
 /**
  * Deep coverage for:
@@ -89,47 +88,4 @@ test("free plan checkout submits without payment method section", { tag: ['@flow
 
   // Free plan should NOT show payment card inputs
   await expect(page.locator('input[placeholder*="tarjeta"]')).toHaveCount(0);
-});
-
-test("corporativo checkout confirms the subscription with the tokenized card", { tag: ['@flow:subscriptions-management', '@module:subscriptions', '@priority:P2', '@role:shared'] }, async ({ page }) => {
-  const userId = 9852;
-
-  await installWompiStubs(page, { sessionId: "e2e-wompi-session", tokenId: "e2e-card-token" });
-  await installSubscriptionsApiMocks(page, {
-    userId,
-    role: "client",
-    currentSubscription: null,
-  });
-
-  await setAuthLocalStorage(page, {
-    token: "e2e-token",
-    userAuth: { id: userId, role: "client", is_profile_completed: true },
-  });
-
-  await page.goto("/checkout/corporativo");
-  await expect(page.getByRole("heading", { name: "Finalizar Suscripción" })).toBeVisible({ timeout: 15_000 });
-
-  // Tokenize a card, then confirm the paid subscription
-  await page.getByPlaceholder("Como aparece en la tarjeta").fill("E2E Corp");
-  await page.getByPlaceholder("0000 0000 0000 0000").fill("4242 4242 4242 4242");
-  await page.getByPlaceholder("MM").fill("12");
-  await page.getByPlaceholder("AA").fill("29");
-  await page.getByPlaceholder("CVC", { exact: true }).fill("123");
-  await page.getByRole("button", { name: "Guardar método de pago" }).click();
-
-  const confirmButton = page.getByRole("button", { name: "Confirmar Suscripción" });
-  await expect(confirmButton).toBeEnabled({ timeout: 10_000 });
-
-  const createRequest = page.waitForRequest(
-    (request) => request.url().includes("/api/subscriptions/create/") && request.method() === "POST"
-  );
-  await confirmButton.click();
-
-  const payload = (await createRequest).postDataJSON();
-  expect(payload.plan_type).toBe("corporativo");
-  expect(payload.token).toBe("e2e-card-token");
-  expect(payload.session_id).toBe("e2e-wompi-session");
-
-  // quality: allow-fragile-selector (SweetAlert2 popup, precedent in suite)
-  await expect(page.locator('[class~="swal2-popup"]')).toContainText("Suscripción Creada", { timeout: 10_000 });
 });
