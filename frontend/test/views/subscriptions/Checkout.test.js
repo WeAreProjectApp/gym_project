@@ -110,7 +110,7 @@ describe("Checkout view", () => {
   // Hotfix 2026-10-07: online payment is not available. A paid plan shows the notice and a disabled
   // «Próximamente» button instead of the Wompi card form.
   test("paid plan shows the unavailable notice and a disabled Próximamente button", async () => {
-    const { wrapper } = await mountView({ plan: "cliente" });
+    const { wrapper, subscriptionStore } = await mountView({ plan: "cliente" });
 
     const notice = wrapper.get("[data-testid='checkout-paid-unavailable']");
     const soon = wrapper.findAll("button").find((b) => b.text().includes("Próximamente"));
@@ -118,6 +118,9 @@ describe("Checkout view", () => {
     expect(notice.text()).toContain("El pago en línea no está disponible por ahora");
     expect(soon.attributes("disabled")).toBe("");
     expect(wrapper.find("input").exists()).toBe(false);
+    // No third-party payment script is loaded and no payment key is requested.
+    expect(document.head.querySelectorAll("script[src*='wompi']")).toHaveLength(0);
+    expect(subscriptionStore.fetchWompiPublicKey).not.toHaveBeenCalled();
   });
 
   test("paid plan never creates a subscription without payment", async () => {
@@ -129,12 +132,5 @@ describe("Checkout view", () => {
     expect(subscriptionStore.createSubscription).not.toHaveBeenCalled();
     expect(Swal.default.fire).toHaveBeenCalledWith(expect.objectContaining({ title: "Próximamente" }));
     expect(mockRouterPush.mock.calls.length).toBe(0);
-  });
-
-  test("paid plan loads no third-party payment script and asks no payment key", async () => {
-    const { subscriptionStore } = await mountView({ plan: "cliente" });
-
-    expect(document.head.querySelectorAll("script[src*='wompi']")).toHaveLength(0);
-    expect(subscriptionStore.fetchWompiPublicKey).not.toHaveBeenCalled();
   });
 });
