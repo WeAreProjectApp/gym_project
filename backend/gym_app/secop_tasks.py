@@ -122,12 +122,13 @@ def send_secop_weekly_summaries():
     service.send_summaries('WEEKLY')
 
 
-@periodic_task(crontab(hour='3', minute='30'))
+# 08:37 UTC: clear of the heavy jobs of the projects that share the staging host (Huey and host timers).
+@periodic_task(crontab(hour='8', minute='37'))
 def purge_old_secop_processes():
     """
     Purge old closed processes without classifications.
 
-    Runs daily at 3:30 AM. Removes processes that:
+    Runs daily at 08:37 UTC (03:37 in Colombia). Removes processes that:
     - Have a closing date older than 30 days
     - Have no user classifications
 
