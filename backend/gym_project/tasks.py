@@ -70,7 +70,8 @@ def manual_backup():
     return scheduled_backup()
 
 
-@periodic_task(crontab(hour='4', minute='0'))
+# 07:52 UTC: clear of the heavy jobs of the projects that share the staging host (Huey and host timers).
+@periodic_task(crontab(hour='7', minute='52'))
 def silk_garbage_collection():
     """
     Daily cleanup of Silk profiling data older than 7 days.
@@ -174,7 +175,8 @@ def weekly_slow_queries_report():
     return report
 
 
-@periodic_task(crontab(day='1', hour='5', minute='0'))
+# Day 1 at 10:37 UTC: clear of the heavy jobs of the projects that share the staging host (Huey and host timers).
+@periodic_task(crontab(day='1', hour='10', minute='37'))
 def silk_reports_cleanup():
     """
     Monthly cleanup of Silk report files older than 6 months.
