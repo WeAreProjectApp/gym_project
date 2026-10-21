@@ -45,7 +45,7 @@ pyHanko==0.36.2
 pyhanko-certvalidator==0.31.4
 PyJWT==2.15.0
 PyMuPDF==1.28.2
-pypdf==6.19.0
+pypdf==6.21.2
 pyphen==0.18.1
 pytest==9.1.1
 pytest-cov==7.1.0
