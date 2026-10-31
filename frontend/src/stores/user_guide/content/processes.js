@@ -108,11 +108,11 @@ export const processesContent = {
     },
     {
       id: 'create-process',
-      name: 'Radicar Proceso (Solo Abogados)',
+      name: 'Radicar Proceso (Abogados y Administradores)',
       description: 'Crear un nuevo proceso judicial',
-      roles: ['lawyer'],
+      roles: ['lawyer', 'admin'],
       content: `
-        <p>Los abogados pueden crear nuevos procesos judiciales completando un formulario detallado con toda la información del caso.</p>
+        <p>Los abogados y administradores pueden crear nuevos procesos judiciales. El administrador debe seleccionar un abogado responsable; al abogado se le asigna inicialmente su propia cuenta.</p>
       `,
       features: [
         'Formulario completo con validación de campos',
@@ -126,8 +126,8 @@ export const processesContent = {
       ],
       steps: [
         {
-          title: 'Click en "Radicar Proceso"',
-          description: 'Botón verde en la parte superior derecha de la lista de procesos'
+          title: 'Click en "Nuevo"',
+          description: 'Botón con el símbolo + junto al contador de resultados de la lista de procesos'
         },
         {
           title: 'Completa información básica',
@@ -155,7 +155,8 @@ export const processesContent = {
         }
       ],
       restrictions: [
-        'Solo los abogados pueden crear procesos',
+        'Solo los abogados y administradores pueden crear procesos',
+        'El administrador debe seleccionar un abogado responsable antes de guardar',
         'Todos los campos marcados con * son obligatorios',
         'Los clientes NO tienen acceso a esta funcionalidad'
       ],
@@ -170,7 +171,7 @@ export const processesContent = {
         steps: [
           {
             title: 'Accede a Radicar Proceso',
-            description: 'Desde la lista de procesos, click en el botón verde "Radicar Proceso"'
+            description: 'Desde la lista de procesos, click en el botón "Nuevo" junto al contador de resultados'
           },
           {
             title: 'Información de las Partes',

@@ -217,9 +217,11 @@
               <span class="font-medium">{{ filteredAndSortedProcesses.length }}</span> resultados
             </div>
 
-            <!-- New Process Button (only for lawyers) -->
+            <!-- New Process Button (lawyers and administrators) -->
             <router-link
-              v-if="currentUser?.role === 'lawyer'"
+              v-if="userStore.isLawyerLike"
+              data-testid="process-create-link"
+              aria-label="Nuevo proceso"
               :to="{ name: 'process_form', params: { action: 'create' } }"
               class="inline-flex items-center gap-2 px-3 py-2 bg-secondary text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
             >

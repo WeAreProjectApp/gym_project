@@ -1,4 +1,4 @@
-import { shallowMount } from "@vue/test-utils";
+import { shallowMount, RouterLinkStub } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import { reactive } from "vue";
 
@@ -99,7 +99,8 @@ const mountView = async ({
     global: {
       plugins: [pinia],
       stubs: {
-        RouterLink: { template: "<a><slot /></a>" },
+        RouterLink: RouterLinkStub,
+        TabsCard: { template: "<section><slot /></section>" },
         Menu: MenuStub,
         MenuButton: { template: "<button><slot /></button>" },
         MenuItems: { template: "<div><slot /></div>" },
@@ -118,6 +119,30 @@ describe("ProcessList.vue", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRoute = reactive({ params: {}, query: {} });
+  });
+
+  test.each([
+    { role: "lawyer" },
+    { role: "admin" },
+    { role: "basic", is_staff: true },
+    { role: "basic", is_superuser: true },
+  ])("offers process creation for $role $is_staff $is_superuser", async (permissions) => {
+    const { wrapper } = await mountView({ currentUser: { id: 9, ...permissions } });
+
+    const link = wrapper.find('[data-testid="process-create-link"]');
+
+    expect(link.exists()).toBe(true);
+    expect(wrapper.findComponent(RouterLinkStub).props("to")).toEqual({
+      name: "process_form", params: { action: "create" },
+    });
+  });
+
+  test.each(["client", "basic", "corporate_client"])("hides process creation for %s", async (role) => {
+    const { wrapper } = await mountView({ currentUser: { id: 9, role } });
+
+    const link = wrapper.find('[data-testid="process-create-link"]');
+
+    expect(link.exists()).toBe(false);
   });
 
   test("filters archived processes for client and toggles modal", async () => {

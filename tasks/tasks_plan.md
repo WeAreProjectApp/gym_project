@@ -9,6 +9,13 @@ con CI verde hacia `master`. Ronda `i3-legal-relationships-20261002`.
 
 ## 1. Feature Status
 
+**2026-10-31 — Crear procesos como admin:** botón Nuevo mediante el permiso
+compartido, abogado responsable obligatorio sin preasignar al administrador,
+ayuda y flujo E2E actualizados. Verificados 33 tests unitarios, 5 E2E sin
+reintentos, compilación y gate focalizado; el flow de creación cubre
+success/error/failure. Entrega mediante PR con CI verde y merge-queue solicitado.
+Sin migraciones ni cambios de API.
+
 **2026-10-03 — Precargas localizadas:** pagos cargan sus autores; carpetas
 reutilizan el plan completo de documentos después de comprobar el propietario;
 detalle de servicios y último borrador comparten las precargas de respuestas,

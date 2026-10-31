@@ -112,8 +112,8 @@ for (const viewport of ['compact', 'portrait']) {
       // quality: allow-duplicate (per-viewport contract — same behavior at standard widths)
       await openProcessesGuide(page);
 
-      await page.getByRole('button', { name: 'Radicar Proceso (Solo Abogados)' }).click();
-      await expect(page.getByRole('heading', { name: 'Radicar Proceso (Solo Abogados)' })).toHaveText('Radicar Proceso (Solo Abogados)');
+      await page.getByRole('button', { name: 'Radicar Proceso (Abogados y Administradores)' }).click();
+      await expect(page.getByRole('heading', { name: 'Radicar Proceso (Abogados y Administradores)' })).toHaveText('Radicar Proceso (Abogados y Administradores)');
       await page.getByRole('button', { name: 'Ver Ejemplo Completo' }).click();
       const dialog = page.getByTestId('guide-example-dialog');
       const title = dialog.getByRole('heading', {
