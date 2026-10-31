@@ -14,6 +14,8 @@ Validación local: 33 tests unitarios en dos lotes y 5 E2E sin reintentos
 de abogado). Compilación y gate focalizado aprobados; mapa fresco y `process-create`
 cubierto para success/error/failure, sin junk nuevo. Sin cambios de API,
 migraciones ni despliegue. El cierre usa PR con CI verde y merge-queue solicitado.
+Las tres regresiones del manual que abrían la sección de creación usan ahora el
+título que incluye administradores: aprobadas sin reintentos, con gate limpio.
 
 ### Precargas de pagos, carpetas y borradores — mejora transversal (2026-10-03)
 

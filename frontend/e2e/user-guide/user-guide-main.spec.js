@@ -217,7 +217,7 @@ test.describe("user guide: example modal component", { tag: ['@flow:user-guide-n
     const sidebar = page.locator("aside");
     await expect(sidebar.getByRole("button", { name: "Procesos", exact: true })).toBeVisible({ timeout: 10_000 });
     await sidebar.getByRole("button", { name: "Procesos", exact: true }).click();
-    await page.getByRole("button", { name: "Radicar Proceso (Solo Abogados)" }).click();
+    await page.getByRole("button", { name: "Radicar Proceso (Abogados y Administradores)" }).click();
 
     // The section exposes the example trigger
     await page.getByRole("button", { name: "Ver Ejemplo Completo" }).click();
