@@ -1,6 +1,6 @@
 {
-  "version": "1.13.7",
-  "lastUpdated": "2026-10-07",
+  "version": "1.13.8",
+  "lastUpdated": "2026-10-31",
   "flows": {
     "user-guide-explorer-navigation": {
       "name": "Explorar el ecosistema desde el manual",
@@ -476,13 +476,15 @@
       "name": "Radicar (crear) proceso",
       "module": "processes",
       "roles": [
-        "lawyer"
+        "lawyer",
+        "admin"
       ],
       "priority": "P1",
-      "description": "Formulario completo de nuevo proceso con etapas",
+      "description": "Crear desde Nuevo en el listado. Admin/staff/superuser seleccionan un abogado responsable obligatorio; el abogado conserva su asignación inicial.",
       "expectedSpecs": 1,
       "outcomes": [
         "success",
+        "error",
         "failure"
       ]
     },

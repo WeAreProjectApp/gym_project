@@ -196,11 +196,13 @@ describe("ProcessForm.vue", () => {
 
   test("submits a valid new process and navigates to list", async () => {
     const client = { id: 7, first_name: "Ana", last_name: "Lopez", role: "client" };
+    const lawyer = { id: 55, role: "lawyer" };
 
     const { wrapper } = await mountView({
       routeParams: { action: "add", process_id: "" },
       caseTypes: [{ id: 10, type: "Civil" }],
-      users: [client],
+      users: [client, lawyer],
+      currentUser: lawyer,
       authUser: { id: 55 },
     });
     const setupState = getSetupState(wrapper);

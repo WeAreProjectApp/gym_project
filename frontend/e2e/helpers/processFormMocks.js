@@ -65,6 +65,7 @@ export async function installProcessFormApiMocks(
   {
     lawyer,
     client,
+    currentUser = lawyer,
     caseTypes = [{ id: 1, type: "Civil" }],
     createdProcess,
   }
@@ -99,19 +100,19 @@ export async function installProcessFormApiMocks(
       return {
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([lawyer, client]),
+        body: JSON.stringify([...new Map([lawyer, client, currentUser].map(user => [user.id, user])).values()]),
       };
     }
 
-    if (apiPath === `users/${lawyer.id}/`) {
+    if (apiPath === `users/${currentUser.id}/`) {
       return {
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(lawyer),
+        body: JSON.stringify(currentUser),
       };
     }
 
-    if (apiPath === `users/${lawyer.id}/signature/`) {
+    if (apiPath === `users/${currentUser.id}/signature/`) {
       return {
         status: 200,
         contentType: "application/json",

@@ -27,6 +27,7 @@
             <div class="mt-2">
               <input
                 v-model="formData.plaintiff"
+                data-testid="process-plaintiff"
                 type="text"
                 name="plaintiff"
                 id="plaintiff"
@@ -47,6 +48,7 @@
             <div class="mt-2">
               <input
                 v-model="formData.defendant"
+                data-testid="process-defendant"
                 type="text"
                 name="defendant"
                 id="defendant"
@@ -135,6 +137,7 @@
             <div class="mt-2">
               <input
                 v-model="formData.subcase"
+                data-testid="process-subcase"
                 type="text"
                 name="defendant"
                 id="defendant"
@@ -158,6 +161,7 @@
             <div class="mt-2">
               <input
                 v-model="formData.ref"
+                data-testid="process-ref"
                 type="text"
                 name="plaintiff"
                 id="plaintiff"
@@ -933,14 +937,14 @@ onMounted(async () => {
     console.error('Error initializing process form auxiliary data:', error);
   }
 
-  // Create mode: default the responsible lawyer to the logged-in user.
-  if (!programIdParam.value && !selectedLawyer.value) {
+  // Only lawyers default to themselves; administrators must choose an assignee.
+  if (!programIdParam.value && !selectedLawyer.value && userStore.currentUser?.role === 'lawyer') {
     const currentId = authStore.userAuth?.id;
     const currentLawyer =
       userStore.userById(currentId) ||
       (userStore.currentUser?.id === currentId ? userStore.currentUser : null);
     selectedLawyer.value = currentLawyer;
-    formData.lawyerId = currentLawyer?.id || currentId || "";
+    formData.lawyerId = currentLawyer?.id || "";
   }
 });
 
@@ -1118,9 +1122,8 @@ const validateFormData = () => {
 const onSubmit = async () => {
   formData.caseTypeId = selectedCaseType.value?.id || "";
   formData.clientIds = selectedClients.value.map((client) => client.id);
-  // Assign to the lawyer chosen in the selector (defaults to the current
-  // user in create mode); falls back to the logged-in user as a safety net.
-  formData.lawyerId = selectedLawyer.value?.id || authStore.userAuth?.id || "";
+  // Require an explicit selection; an administrator is never a fallback assignee.
+  formData.lawyerId = selectedLawyer.value?.id || "";
 
   // Ensure process ID is set for updates
   if (actionParam.value === 'edit' && programIdParam.value) {
@@ -1180,7 +1183,7 @@ const archiveProcess = async () => {
     formData.caseTypeId = selectedCaseType.value?.id || "";
     formData.clientIds = selectedClients.value.map((client) => client.id);
     // Preserve the assigned lawyer when archiving the process.
-    formData.lawyerId = selectedLawyer.value?.id || authStore.userAuth?.id || "";
+    formData.lawyerId = selectedLawyer.value?.id || "";
 
     // Use the archive flag to differentiate this from regular updates
     formData.isArchiving = true;

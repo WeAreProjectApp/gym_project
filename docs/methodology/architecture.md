@@ -331,6 +331,11 @@ erDiagram
 
 ### 5.2 Processes Domain (5 models)
 
+El botón Nuevo del listado usa `isLawyerLike` (abogado/admin/staff/superuser).
+Al crear, sólo el rol abogado se preasigna; los administradores eligen un abogado
+activo obligatorio. Guardar/archivar usan la selección, sin fallback al actor.
+La edición conserva al responsable existente, incluso archivado.
+
 | Model | Key Fields | Relationships |
 |-------|-----------|---------------|
 | `Case` | type | — (lookup table for case types) |

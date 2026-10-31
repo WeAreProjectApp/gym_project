@@ -2,6 +2,19 @@
 
 ## 1. Current State
 
+### Creación de procesos para administradores (2026-10-31)
+
+Implementado en `fix/31102026-admin-process-create`, desde `master`.
+El botón Nuevo consume el permiso compartido de abogado/admin/staff/superuser.
+El administrador debe elegir un abogado activo; sólo el rol abogado se preasigna
+a sí mismo. Guardar y archivar conservan el responsable seleccionado, sin usar
+al administrador como fallback. Se mantiene la edición de responsables archivados.
+Validación local: 33 tests unitarios en dos lotes y 5 E2E sin reintentos
+(crear como admin a 1440/412 px, responsable obligatorio, fallo API y regresión
+de abogado). Compilación y gate focalizado aprobados; mapa fresco y `process-create`
+cubierto para success/error/failure, sin junk nuevo. Sin cambios de API,
+migraciones ni despliegue. El cierre usa PR con CI verde y merge-queue solicitado.
+
 ### Precargas de pagos, carpetas y borradores — mejora transversal (2026-10-03)
 
 Ronda `i5-query-preloads-20261003` en worktree propio, con PR independiente hacia

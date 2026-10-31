@@ -435,6 +435,22 @@ la fuente actualizada para el total es `flow-definitions.json`.
 
 ## Flujos — Admin
 
+### process-create: Crear proceso desde el listado
+
+El administrador, staff o superusuario entra a Procesos y pulsa **Nuevo** junto
+al contador de resultados. Reutiliza el formulario de abogados, con el responsable
+vacío y obligatorio: debe seleccionar un abogado activo antes de guardar. El
+administrador no se asigna automáticamente. La edición conserva el responsable
+actual, incluso si fue archivado. Clientes, usuarios básicos y corporativos no
+ven el botón.
+
+| Interacción | Outcome | Prueba |
+|---|---|---|
+| Crear con un abogado seleccionado, desde escritorio y móvil | success | `process-admin-create.spec.js` |
+| Guardar sin abogado: aviso obligatorio, sin petición de creación | error | `process-admin-create.spec.js` |
+| Fallo de creación en la API: aviso de error sin proceso creado | failure | `process-admin-create.spec.js` |
+| Ver el listado | display | Flow independiente `process-list-view` |
+
 ### admin-data-reassignment: Reasignación de datos de abogado
 - **Módulo:** admin | **Prioridad:** P1 | **Ruta:** `/data_reassignment` | **E2E:** ✅ (`data-reassignment-flow.spec.js` — 5 tests: transferencia+archivado, restauración, entrada por quick action del dashboard, error de backend en execute, guard no-admin)
 - **Descripción:** Módulo exclusivo de administradores para transferir procesos y documentos de un abogado a otro y archivar cuentas de abogados. Acceso desde el menú lateral "Reasignación de Datos" (solo admin) y el botón rápido del dashboard. La transferencia es atómica: los procesos pasan al destino, la gestión de documentos (`managed_by`) también, y `assigned_to` migra solo cuando era el abogado origen; `created_by` nunca cambia (auditoría). Los documentos en estados de firma (Pendiente/Firmado/Rechazado/Vencido) no son transferibles. Archivar un abogado bloquea su login por todos los métodos, lo excluye de listados y notificaciones, y es reversible.
@@ -592,17 +608,17 @@ la fuente actualizada para el total es `flow-definitions.json`.
 
 ### process-create: Radicar proceso
 - **Módulo:** processes | **Prioridad:** P1 | **Ruta:** `/process_form/create` | **E2E:** ✅
-- **Descripción:** Crear nuevo proceso judicial (solo Lawyer)
+- **Descripción:** Crear nuevo proceso judicial (Lawyer y Admin; incluye staff/superuser).
 
 **Pasos:**
-1. Click "Radicar Proceso"
+1. Desde el listado de procesos, click "Nuevo".
 2. Llena formulario:
    - **Tipo de caso** (Combobox con búsqueda)
    - Subcaso (texto libre)
    - Demandante, Demandado
    - Autoridad, Referencia/Radicado
    - **Clientes** (multi-select con búsqueda)
-   - Abogado responsable
+   - Abogado responsable: inicialmente el propio abogado; vacío y obligatorio para admin/staff/superuser.
    - **Etapas procesales** (tabla dinámica, agregar N etapas con fecha)
    - Archivos del expediente (upload múltiple)
 3. Click "Guardar"
